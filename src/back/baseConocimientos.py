@@ -2,6 +2,12 @@ import os
 from model import require
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
+import uuid
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.schema import Document
+from azure.search.documents import SearchClient
+import time
+import shutil
 
 # Función para obtener los archivos de una ruta
 def obtenerArchivos(ruta=None):
@@ -12,7 +18,7 @@ def obtenerArchivos(ruta=None):
     listaDeArchivos = []
 
     # Bucle para verificar si el elemento es un archivo
-    for elemento in os.listdir("/content"):
+    for elemento in os.listdir("/archivos"):
 
         # Verificamos si el elemento es un archivo y no un directorio
         if os.path.isfile(elemento) == True:
@@ -57,3 +63,110 @@ def leerContenidoDeDocumento(rutaArchivo):
             contenido = contenido + linea.content + "\n"
 
     return contenido
+
+#Obtiene los chunks desde un texto leído
+def obtenerChunks(
+  contenido: str = ""
+):
+  #Creamos el documento con el texto que hemos extraido
+  documento = [
+    Document(page_content = contenido)
+  ]
+
+  #Definimos cómo se crearán los chunks del texto
+  cortadorDeTexto = CharacterTextSplitter(
+    separator = "\n", #Enter
+    chunk_size = 1000,  #Tamaño de cada fragmento
+    chunk_overlap = 100  #Superposición entre fragmentos
+  )
+
+  #Creamos los chunks
+  chunks = cortadorDeTexto.split_documents(documento)
+
+  #Información del documento que se almacena
+  chunksConIdentificadores = []
+
+  #Iteramos los chunks para darle la estructura
+  for chunk in chunks:
+
+    #Definimos la estructura del chunk que insertaremos con su identificador
+    estructuraDeChunk = {
+      "id": str(uuid.uuid4()),
+      "content": chunk.page_content
+    }
+
+    #Lo agregamos al array
+    chunksConIdentificadores.append(estructuraDeChunk)
+
+  return chunksConIdentificadores
+
+#Carga un archivo en una base de conocimiento
+def cargarArchivo(
+  rutaDeArchivo = None,
+  nombreDeBaseDeConocimiento: str = "" 
+):
+  #Leemos el contenido del archivo
+  contenido = leerContenidoDeDocumento(rutaDeArchivo)
+
+  #Creamos los chunks
+  chunks = obtenerChunks(contenido)
+
+  #Nos conectamos a la base de conocimiento
+  baseDeConocimiento = SearchClient(
+    f"https://{require("CONF_AZURE_SEARCH_SERVICE_NAME")}.search.windows.net",
+    nombreDeBaseDeConocimiento,
+    AzureKeyCredential(require("CONF_AZURE_SEARCH_KEY"))
+  )
+
+  #Insertamos los chunks en la base de conocimiento
+  resultadosDeInserciones = baseDeConocimiento.upload_documents(chunks)
+
+  return resultadosDeInserciones
+
+#Sincroniza los documentos de una ruta a una base de conocimiento
+def sincronizarBaseDeConocimiento(
+    carpeta: str = "",
+    nombreDeBaseDeConocimiento: str = "",
+    tiempoDeEspera: float = 0,
+):
+  #Bucle infinito
+  while True:
+    print("Ejecutando sincronizacion...")
+
+    #Obtenemos los archivos de la ruta
+    listaDeArchivos = obtenerArchivos(
+      ruta = carpeta
+    )
+
+    #Verificamos si hay al menos 1 archivo
+    if len(listaDeArchivos) >= 1:
+
+      #Iteramos la lista de archivos
+      for archivo in listaDeArchivos:
+        print(f"Cargando archivo: {archivo}")
+
+        try:
+          #Cargamos el archivo
+          resultadosDeInserciones = cargarArchivo(
+            rutaDeArchivo = archivo,
+            nombreDeBaseDeConocimiento = nombreDeBaseDeConocimiento
+          )
+
+          #Eliminamos el archivo
+          os.remove(archivo)
+
+        except Exception as e:
+          print(f"Ocurrió un error al sincronizar: {e}")
+
+          #Definimos la carpeta de "_errores"
+          carpetaDeErrores = os.path.join(carpeta, "_errores/", str(uuid.uuid4())+"/")
+          print(f"Moviendo archivo a carpeta de errores: {carpetaDeErrores}")
+
+          #Creamos la carpeta de "_errores"
+          os.makedirs(carpetaDeErrores)
+
+          #Movemos el archivo a la carpeta errores
+          shutil.move(archivo, carpetaDeErrores)
+
+    #Esperamos antes de repetir el bucle
+    time.sleep(tiempoDeEspera)

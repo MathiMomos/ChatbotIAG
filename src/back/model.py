@@ -23,7 +23,7 @@ def obtenerModelo() -> AzureChatOpenAI:
     return AzureChatOpenAI(
         api_version=require("CONF_API_VERSION"),
         azure_endpoint=require("CONF_AZURE_ENDPOINT"),
-        openai_api_key=require("CONF_OPENAI_API_KEY"),
+        openai_api_key=require("CONF_OPENAI_API_KEY"), # type: ignore
         azure_deployment=require("CONF_AZURE_DEPLOYMENT"),
     )
 
