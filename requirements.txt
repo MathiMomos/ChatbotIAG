@@ -1,0 +1,8 @@
+openai
+langchain
+langchain-community
+langchain-openai
+pypdf
+azure-search-documents
+azure-ai-formrecognizer
+python-dotenv

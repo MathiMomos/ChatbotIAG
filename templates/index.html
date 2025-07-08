@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Genérico</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}">
+</head>
+<body>
+<div class="chatbot-container">
+    <div id="chat-log">
+        <div class="chatbot-message">¡Hola! ¿En qué puedo ayudarte hoy?</div>
+    </div>
+    <div class="user-input">
+        <input type="text" id="user-message" placeholder="Escribe tu mensaje...">
+        <button id="send-button">Enviar</button>
+    </div>
+</div>
+<script>
+    // Inicio del código JavaScript
+    document.addEventListener('DOMContentLoaded', function() {
+        const sendButton = document.getElementById('send-button');
+        const userMessageInput = document.getElementById('user-message');
+        const chatLog = document.getElementById('chat-log');
+
+        // Evento para el botón de enviar
+        sendButton.addEventListener('click', sendMessage);
+
+        // Evento para la tecla Enter en el campo de texto
+        userMessageInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Función para enviar el mensaje
+        function sendMessage() {
+            const message = userMessageInput.value.trim(); // Obtener el mensaje y eliminar espacios extra
+            if (message) { // Si el mensaje no está vacío
+                addUserMessage(message); // Añadir el mensaje del usuario al log
+                userMessageInput.value = ''; // Limpiar el campo de texto
+
+                // --- Lógica para enviar el mensaje al backend (simulada) ---
+                // Aquí es donde normalmente harías una petición AJAX (fetch o XMLHttpRequest)
+                // a tu servidor Flask para obtener la respuesta del chatbot.
+                // Por ahora, simulamos una respuesta después de un breve retraso.
+                setTimeout(() => {
+                    addChatbotResponse("Mensaje recibido: '" + message + "'. Estoy procesando tu consulta...");
+                }, 800); // Simulación de respuesta después de 800ms
+            }
+        }
+
+        // Función para añadir un mensaje del usuario al log del chat
+        function addUserMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('user-message'); // Clase CSS para mensajes del usuario
+            messageDiv.textContent = message;
+            chatLog.appendChild(messageDiv);
+            chatLog.scrollTop = chatLog.scrollHeight; // Desplazar hacia abajo para ver el último mensaje
+        }
+
+        // Función para añadir un mensaje del chatbot al log del chat
+        function addChatbotResponse(response) {
+            const responseDiv = document.createElement('div');
+            responseDiv.classList.add('chatbot-message'); // Clase CSS para mensajes del chatbot
+            responseDiv.textContent = response;
+            chatLog.appendChild(responseDiv);
+            chatLog.scrollTop = chatLog.scrollHeight; // Desplazar hacia abajo para ver el último mensaje
+        }
+    });
+    // Fin del código JavaScript
+</script>
+</body>
+</html>
