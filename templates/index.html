@@ -3,72 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chatbot Genérico</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}">
+    <title>Chatbot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+
 <div class="chatbot-container">
-    <div id="chat-log">
-        <div class="chatbot-message">¡Hola! ¿En qué puedo ayudarte hoy?</div>
-    </div>
-    <div class="user-input">
-        <input type="text" id="user-message" placeholder="Escribe tu mensaje...">
-        <button id="send-button">Enviar</button>
+    <header class="chat-header">
+        <div class="header-left">
+            <div class="icon-container star-container">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="#3CC786" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h1>¿Tienen preguntas?</h1>
+        </div>
+        <div class="icon-container number-container">
+            <span>0</span>
+        </div>
+    </header>
+    <div class="chat">
+        <div id="global-messages" class="global-messages">
+            <div class="message bot-message">¡Hola! Soy tu asistente. ¿En qué puedo ayudarte hoy?</div>
+        </div>
+
+        <div class="input-container">
+            <input type="text" id="user-input" placeholder="Envia un mensaje...">
+            <button id="mic-button" class="mic-button"> <svg width="24" height="24" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 14C13.66 14 15 12.66 15 11V5C15 3.34 13.66 2 12 2C10.34 2 9 3.34 9 5V11C9 12.66 10.34 14 12 14ZM10.8 4.9C10.8 4.4 11.2 4 11.7 4H12.3C12.8 4 13.2 4.4 13.2 4.9V11.1C13.2 11.6 12.8 12 12.3 12H11.7C11.2 12 10.8 11.6 10.8 11.1V4.9Z" />
+                <path d="M17.3 11C17.3 13.71 15.11 15.9 12.4 15.9C9.69 15.9 7.5 13.71 7.5 11H6C6 14.31 8.54 16.99 11.75 17.41V20H13.25V17.41C16.46 16.99 19 14.31 19 11H17.3Z" />
+            </svg>
+            </button>
+        </div>
     </div>
 </div>
+
 <script>
-    // Inicio del código JavaScript
     document.addEventListener('DOMContentLoaded', function() {
-        const sendButton = document.getElementById('send-button');
-        const userMessageInput = document.getElementById('user-message');
-        const chatLog = document.getElementById('chat-log');
+        const userInput = document.getElementById('user-input');
+        // const sendButton = document.getElementById('send-button'); // Ya no necesitamos este listener
+        const globalMessages = document.getElementById('global-messages');
 
-        // Evento para el botón de enviar
-        sendButton.addEventListener('click', sendMessage);
+        // Función para añadir un mensaje al chat
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            if (sender === 'bot') {
+                messageDiv.classList.add('bot-message');
+            } else if (sender === 'user') {
+                messageDiv.classList.add('user-message');
+            }
+            messageDiv.textContent = text;
+            globalMessages.appendChild(messageDiv);
+            globalMessages.scrollTop = globalMessages.scrollHeight;
+        }
 
-        // Evento para la tecla Enter en el campo de texto
-        userMessageInput.addEventListener('keypress', function(event) {
+        // Función para enviar el mensaje (ahora solo llamada por Enter)
+        function sendMessage() {
+            const messageText = userInput.value.trim();
+            if (messageText) {
+                addMessage(messageText, 'user');
+                userInput.value = '';
+
+                fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: messageText })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        addMessage(data.response, 'bot');
+                    })
+                    .catch(error => {
+                        console.error('Error al enviar mensaje:', error);
+                        addMessage('Lo siento, algo salió mal. Inténtalo de nuevo.', 'bot');
+                    });
+            }
+        }
+
+        // SOLO Event listener para la tecla Enter en el campo de input
+        userInput.addEventListener('keypress', function(event) {
             if (event.key === 'Enter') {
                 sendMessage();
             }
         });
 
-        // Función para enviar el mensaje
-        function sendMessage() {
-            const message = userMessageInput.value.trim(); // Obtener el mensaje y eliminar espacios extra
-            if (message) { // Si el mensaje no está vacío
-                addUserMessage(message); // Añadir el mensaje del usuario al log
-                userMessageInput.value = ''; // Limpiar el campo de texto
-
-                // --- Lógica para enviar el mensaje al backend (simulada) ---
-                // Aquí es donde normalmente harías una petición AJAX (fetch o XMLHttpRequest)
-                // a tu servidor Flask para obtener la respuesta del chatbot.
-                // Por ahora, simulamos una respuesta después de un breve retraso.
-                setTimeout(() => {
-                    addChatbotResponse("Mensaje recibido: '" + message + "'. Estoy procesando tu consulta...");
-                }, 800); // Simulación de respuesta después de 800ms
-            }
-        }
-
-        // Función para añadir un mensaje del usuario al log del chat
-        function addUserMessage(message) {
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('user-message'); // Clase CSS para mensajes del usuario
-            messageDiv.textContent = message;
-            chatLog.appendChild(messageDiv);
-            chatLog.scrollTop = chatLog.scrollHeight; // Desplazar hacia abajo para ver el último mensaje
-        }
-
-        // Función para añadir un mensaje del chatbot al log del chat
-        function addChatbotResponse(response) {
-            const responseDiv = document.createElement('div');
-            responseDiv.classList.add('chatbot-message'); // Clase CSS para mensajes del chatbot
-            responseDiv.textContent = response;
-            chatLog.appendChild(responseDiv);
-            chatLog.scrollTop = chatLog.scrollHeight; // Desplazar hacia abajo para ver el último mensaje
-        }
+        // NOTA: El botón del micrófono (mic-button) no tiene ningún event listener asignado
+        //       por lo que no hará nada al hacer clic en él.
     });
-    // Fin del código JavaScript
 </script>
 </body>
 </html>
