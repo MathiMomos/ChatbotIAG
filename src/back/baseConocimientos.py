@@ -16,17 +16,11 @@ def obtenerArchivos(ruta=None):
 
     # Acumulamos los archivos encontrados
     listaDeArchivos = []
+    for elemento in os.listdir(ruta):
+        rutaCompleta = os.path.join(ruta, elemento) # type: ignore
 
-    # Bucle para verificar si el elemento es un archivo
-    for elemento in os.listdir("/archivos"):
-
-        # Verificamos si el elemento es un archivo y no un directorio
-        if os.path.isfile(elemento) == True:
-
-            # Definimos la ruta completa
-            rutaCompleta = os.path.join("/content", elemento)
-
-            # Agregamos el archivo
+        # Solo añadimos si es archivo (no directorio)
+        if os.path.isfile(rutaCompleta):
             listaDeArchivos.append(rutaCompleta)
 
     return listaDeArchivos
@@ -137,10 +131,10 @@ def sincronizarBaseDeConocimiento(
     listaDeArchivos = obtenerArchivos(
       ruta = carpeta
     )
-
+    print(f"Archivos encontrados: {listaDeArchivos}")
     #Verificamos si hay al menos 1 archivo
     if len(listaDeArchivos) >= 1:
-
+      print(f"Se encontraron {len(listaDeArchivos)} archivos para sincronizar.")
       #Iteramos la lista de archivos
       for archivo in listaDeArchivos:
         print(f"Cargando archivo: {archivo}")
@@ -151,6 +145,7 @@ def sincronizarBaseDeConocimiento(
             rutaDeArchivo = archivo,
             nombreDeBaseDeConocimiento = nombreDeBaseDeConocimiento
           )
+          print(f"Resultados de inserción: {resultadosDeInserciones}")
 
           #Eliminamos el archivo
           os.remove(archivo)

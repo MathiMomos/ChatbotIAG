@@ -23,7 +23,7 @@ def obtenerModelo() -> AzureChatOpenAI:
     return AzureChatOpenAI(
         api_version=require("CONF_API_VERSION"),
         azure_endpoint=require("CONF_AZURE_ENDPOINT"),
-        openai_api_key=require("CONF_OPENAI_API_KEY"), # type: ignore
+        openai_api_key =require("CONF_OPENAI_API_KEY"),
         azure_deployment=require("CONF_AZURE_DEPLOYMENT"),
     )
 
@@ -38,7 +38,7 @@ def obtenerBaseDeConocimiento(index_name: str) -> AzureAISearchRetriever:
 
 
 # Función utilitaria para crear un agente
-def crearChatbot(llm=None, contexto: str = "", baseDeConocimiento=None) -> RetrievalQA.from_chain_type:
+def crearChatbot(llm=None, contexto: str = "", baseDeConocimiento=None):
 
     memoria = ConversationBufferMemory(
         memory_key="chat_history",  # En el JSON, se creará siempre un parémtro con este nombre para guardar el historial del chat
@@ -49,15 +49,14 @@ def crearChatbot(llm=None, contexto: str = "", baseDeConocimiento=None) -> Retri
         memoria.chat_memory.add_message(SystemMessage(content=contexto)) # añadimos el contexto inicial al historial del chat
 
     # Creamos el agente
-    return RetrievalQA.from_chain_type(
-        llm=llm ,  # Modelo con el que trabajamos # type: ignore
+    chat = RetrievalQA.from_chain_type(
+        llm=llm ,  # Modelo con el que trabajamos
         memory=memoria,  # Colocamos la memoria a corto plazo
-        agent=AgentType.CONVERSATIONAL_REACT_DESCRIPTION,  # Tipo de agente que soporta memoria a corto plazo
-        handle_parsing_errors=True,
         chain_type="stuff",  # Tipo de cadena que se usa para procesar los mensajes
         verbose=True,
         retriever = baseDeConocimiento
     )
+    return chat
 
 def ejecutarChatbot(prompt=None, agente=None) -> str :
     # Ejecutamos el agente
