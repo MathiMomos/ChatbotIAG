@@ -1,8 +1,9 @@
 body {
     margin: 0;
+    font-size: clamp(1rem, 0.9rem + 0.5vw, 1.125rem);
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    font-size: larger;
     background: linear-gradient(180deg, #00CA73 0%, #0087A6 80%);
+    background-attachment: fixed;
     min-height: 100vh;
     display: flex;
     justify-content: center;
@@ -10,8 +11,10 @@ body {
 }
 
 .chatbot-container {
-    width: 892px;
+    width: 100%;
+    max-width: 892px;
     height: 932px;
+    max-height: 100vh;
     background-color: transparent;
     display: flex;
     flex-direction: column;
@@ -50,14 +53,14 @@ body {
 
 h1 {
     font-weight: 700;
-    font-size: 28px;
+    font-size: clamp(1.375rem, 1.2rem + 1.5vw, 1.75rem);
     color: white;
     margin: 0;
 }
 
 .number-container span {
     font-weight: 700;
-    font-size: 24px;
+    font-size: clamp(1.25rem, 1rem + 1vw, 1.5rem);
     color: #3CC786;
 }
 
@@ -89,15 +92,15 @@ h1 {
     padding: 15px 20px;
     background-color: white;
     box-shadow: 0 2px 4px 3px rgba(136,166,181,0.25);
-    display: inline-block; /* Permite que el div se ajuste al contenido */
-    word-wrap: break-word; /* Asegura que palabras largas se rompan si exceden el ancho */
-    overflow-wrap: break-word; /* Otra propiedad para el mismo fin */
+    display: inline-block;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .bot-message {
     border-radius: 4px 18px 18px 18px;
-    max-width: 100%; /* Aumenta el ancho máximo para que ocupe más espacio */
-    align-self: flex-start; /* Permanece alineado a la izquierda */
+    max-width: 100%;
+    align-self: flex-start;
 }
 
 .user-message {
@@ -105,7 +108,7 @@ h1 {
     background: #00CA73;
     color: white;
     max-width: 70%;
-    align-self: flex-end; /* Sigue alineado a la derecha */
+    align-self: flex-end;
 }
 
 .input-container {
@@ -126,7 +129,7 @@ h1 {
     background-color: #d7e1e6;
     padding: 15px 20px;
     border-radius: 25px;
-    font-size: 16px;
+    font-size: clamp(0.9rem, 0.8rem + 0.5vw, 1rem);
     outline: none;
 }
 
@@ -151,17 +154,52 @@ h1 {
 .global-messages::-webkit-scrollbar {
     width: 10px;
 }
-
 .global-messages::-webkit-scrollbar-track {
     background: #D9D9D9;
 }
-
 .global-messages::-webkit-scrollbar-thumb {
     background-color: #acb6c2;
     border-radius: 20px;
     border: 2px solid #D9D9D9;
 }
-
 .global-messages::-webkit-scrollbar-thumb:hover {
     background-color: #76808f;
+}
+
+
+@media (max-width: 768px) {
+    body {
+        align-items: flex-start;
+        padding-top: 1rem;
+    }
+
+    .chatbot-container {
+        height: calc(100vh - 1rem);
+        border-radius: 0;
+        width: calc(100% - 2rem);
+    }
+
+    .chat-header {
+        padding: 15px;
+    }
+
+    .icon-container {
+        width: 48px;
+        height: 48px;
+    }
+
+    .chat {
+        padding: 15px 15px 0 15px;
+    }
+
+    .input-container {
+        margin: 0;
+        padding: 20px 15px;
+        border-top-left-radius: 20px;
+        border-top-right-radius: 20px;
+    }
+
+    .user-message {
+        max-width: 80%;
+    }
 }
