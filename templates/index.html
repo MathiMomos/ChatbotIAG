@@ -37,62 +37,6 @@
         </div>
     </div>
 </div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const userInput = document.getElementById('user-input');
-        // const sendButton = document.getElementById('send-button'); // Ya no necesitamos este listener
-        const globalMessages = document.getElementById('global-messages');
-
-        // Función para añadir un mensaje al chat
-        function addMessage(text, sender) {
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message');
-            if (sender === 'bot') {
-                messageDiv.classList.add('bot-message');
-            } else if (sender === 'user') {
-                messageDiv.classList.add('user-message');
-            }
-            messageDiv.textContent = text;
-            globalMessages.appendChild(messageDiv);
-            globalMessages.scrollTop = globalMessages.scrollHeight;
-        }
-
-        // Función para enviar el mensaje (ahora solo llamada por Enter)
-        function sendMessage() {
-            const messageText = userInput.value.trim();
-            if (messageText) {
-                addMessage(messageText, 'user');
-                userInput.value = '';
-
-                fetch('/api/chat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ message: messageText })
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        addMessage(data.response, 'bot');
-                    })
-                    .catch(error => {
-                        console.error('Error al enviar mensaje:', error);
-                        addMessage('Lo siento, algo salió mal. Inténtalo de nuevo.', 'bot');
-                    });
-            }
-        }
-
-        // SOLO Event listener para la tecla Enter en el campo de input
-        userInput.addEventListener('keypress', function(event) {
-            if (event.key === 'Enter') {
-                sendMessage();
-            }
-        });
-
-        // NOTA: El botón del micrófono (mic-button) no tiene ningún event listener asignado
-        //       por lo que no hará nada al hacer clic en él.
-    });
-</script>
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 </body>
 </html>
