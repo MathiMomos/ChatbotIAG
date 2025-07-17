@@ -1,0 +1,58 @@
+# ################################################
+# Archivos de Secretos y Variables de Entorno
+# ################################################
+# Para no subir credenciales, tokens o API keys al repositorio.
+.env
+*.env
+
+# ############################
+# Artefactos de Python
+# ############################
+# Archivos de bytecode y caché que Python genera automáticamente.
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# ############################
+# Entorno Virtual
+# ############################
+# El entorno virtual es específico de cada máquina y se recrea con requirements.txt.
+venv/
+env/
+.venv/
+*/venv/
+*/env/
+*/.venv/
+
+# ############################
+# Archivos de IDE y Editor
+# ############################
+# Configuraciones locales de tu editor (PyCharm, VSCode, etc.).
+# El archivo .iml es de PyCharm.
+.idea/
+*.iml
+.vscode/
+
+# ################################################
+# Archivos específicos del Sistema Operativo
+# ################################################
+# Archivos de sistema de macOS y Windows.
+.DS_Store
+Thumbs.db
+
+# ############################
+# Logs y Bases de Datos
+# ############################
+# Archivos de registro y bases de datos locales.
+*.log
+*.sqlite3
+*.db
+
+# ############################
+# Carpetas de Build
+# ############################
+# Carpetas generadas al construir o distribuir el paquete.
+build/
+dist/
+*.egg-info/

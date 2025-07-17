@@ -2,7 +2,7 @@ body {
     margin: 0;
     font-size: clamp(1rem, 0.9rem + 0.5vw, 1.125rem);
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(180deg, #00CA73 0%, #0087A6 80%);
+    background: linear-gradient(180deg, #326EAB 0%, #5C3273 80%);
     background-attachment: fixed;
     min-height: 100vh;
     display: flex;
@@ -48,7 +48,7 @@ body {
 }
 
 .star-container { 
-    border: 3px solid #3CC786; 
+    border: 3px solid #326EAB;
 }
 
 h1 { 
@@ -61,7 +61,7 @@ h1 {
 .number-container span { 
     font-weight: 700; 
     font-size: clamp(1.25rem, 1rem + 1vw, 1.5rem); 
-    color: #3CC786; 
+    color: #326EAB;
 }
 
 .chat{ 
@@ -100,13 +100,13 @@ h1 {
 
 .bot-message { 
     border-radius: 4px 18px 18px 18px; 
-    max-width: 90%; 
+    max-width: 100%;
     align-self: flex-start; 
 }
 
 .user-message { 
     border-radius: 18px 4px 18px 18px; 
-    background: #00CA73; 
+    background: #326EAB;
     color: white; 
     max-width: 70%; 
     align-self: flex-end; 
@@ -135,7 +135,7 @@ h1 {
 }
 
 .mic-button { 
-    background-color: #0087A6; 
+    background-color: #5C3273;
     border: none; 
     border-radius: 50%; 
     width: 50px; 
@@ -149,7 +149,7 @@ h1 {
 }
 
 .mic-button:hover { 
-    background-color: #00CA73; 
+    background-color: #5C3273;
 }
 
 .global-messages::-webkit-scrollbar { 

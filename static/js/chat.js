@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 messageDiv.textContent += text.charAt(i);
                 i++;
                 scrollToBottom();
-                setTimeout(typeWriter, 30);
+                setTimeout(typeWriter, 15);
             }
         }
         typeWriter();

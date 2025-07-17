@@ -1,17 +1,12 @@
 from flask import Flask, render_template, request
 
-from src.back.model import obtenerModelo, obtenerBaseDeConocimiento, crearChatbot, ejecutarChatbot
+from src.flow.FlowChatbot import *
+from src.util import util_env as key
+
+GLOBAL_FLOW_CHATBOT = FlowChatbot(archivoDeUsuario = key.require("ARCHIVO_USUARIO_DIR"))
 
 app = Flask(__name__)
 
-# 2. Inicialización del chatbot (esto está bien)
-modelo = obtenerModelo()
-baseDeConocimiento = obtenerBaseDeConocimiento("dat")
-chatbot = crearChatbot(
-    llm=modelo,
-    contexto="Eres un asistente que responde preguntas sobre datos.",
-    baseDeConocimiento=baseDeConocimiento
-)
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -19,7 +14,7 @@ def home():
 @app.route('/chat', methods=['POST'])
 def chat():
     promptUsuario = request.get_data(as_text=True)
-    respuestaModelo = ejecutarChatbot(prompt=promptUsuario, agente=chatbot)
+    respuestaModelo = GLOBAL_FLOW_CHATBOT.ejecutar(prompt=promptUsuario)
     return respuestaModelo
 
 
