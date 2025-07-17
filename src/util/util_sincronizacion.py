@@ -47,28 +47,20 @@ import shutil
 ## #######################################################################################################
 
 #Función para obtener los archivos de una ruta
-def obtenerArchivos(
-    ruta = None
-):
-  #Listamos el contenido de la carpeta
-  os.listdir(ruta)
+def obtenerArchivos(ruta=None):
+    # Listamos el contenido de la carpeta
+    os.listdir(ruta)
 
-  #Acumulamos los archivos encontrados
-  listaDeArchivos = []
+    # Acumulamos los archivos encontrados
+    listaDeArchivos = []
+    for elemento in os.listdir(ruta):
+        rutaCompleta = os.path.join(ruta, elemento) # type: ignore
 
-  #Bucle para verificar si el elemento es un archivo
-  for elemento in os.listdir("/content"):
+        # Solo añadimos si es archivo (no directorio)
+        if os.path.isfile(rutaCompleta):
+            listaDeArchivos.append(rutaCompleta)
 
-    #Verificamos si el elemento es un archivo y no un directorio
-    if os.path.isfile(elemento) == True:
-
-      #Definimos la ruta completa
-      rutaCompleta = os.path.join("/content", elemento)
-
-      #Agregamos el archivo
-      listaDeArchivos.append(rutaCompleta)
-
-  return listaDeArchivos
+    return listaDeArchivos
 
 #Extrae el contenido de un archivo
 def leerContenidoDeDocumento(rutaArchivo):
