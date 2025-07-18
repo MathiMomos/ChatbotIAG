@@ -124,17 +124,24 @@ h1 {
     border-top-left-radius: 30px; 
 }
 
-.input-container input { 
+.input-container textarea { 
     flex-grow: 1; 
     border: none; 
     background-color: #d7e1e6; 
     padding: 15px 20px; 
     border-radius: 25px; 
     font-size: clamp(0.9rem, 0.8rem + 0.5vw, 1rem); 
-    outline: none; 
+    outline: none;
+    resize: none;
+    overflow-y: auto;
+    max-height: 8.5rem;
+    line-height: 1.5;
+    font-family: inherit;
+    min-height: 3.3rem;
+    box-sizing: border-box;
 }
 
-.mic-button { 
+.action-button { 
     background-color: #5C3273;
     border: none; 
     border-radius: 50%; 
@@ -148,8 +155,43 @@ h1 {
     transition: background-color 0.2s; 
 }
 
-.mic-button:hover { 
+#foco-button {
+    background-color: #d7e1e6;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color 0.2s;
+}
+
+#foco-button svg {
+    stroke: #5C3273;
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+}
+
+#foco-button:hover {
+    background-color: #c8d0d5;
+}
+
+#foco-button.active {
     background-color: #5C3273;
+}
+
+#foco-button.active svg {
+    fill: #5C3273;
+    stroke: #ffffff;
+}
+
+.action-button:hover { 
+    background-color: #4a285c;
 }
 
 .global-messages::-webkit-scrollbar { 

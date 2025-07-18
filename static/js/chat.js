@@ -2,12 +2,29 @@ document.addEventListener('DOMContentLoaded', function() {
     const userInput = document.getElementById('user-input');
     const globalMessages = document.getElementById('global-messages');
 
-    // --- FUNCIONES PARA LA ANIMACIÓN ---
+    const focoButton = document.getElementById('foco-button');
+
+    focoButton.addEventListener('click', function() {
+        // Click para cambiar color por ahora
+        this.classList.toggle('active');
+    });
+
+
+    // --- FUNCIONES SROLL TEXTAREA Y AJUSTE ---
 
     // Función para hacer scroll hacia abajo
     function scrollToBottom() {
         globalMessages.scrollTop = globalMessages.scrollHeight;
     }
+
+    // Función para ajustar la altura del textarea
+    function adjustTextareaHeight() {
+        userInput.style.height = 'auto';
+        userInput.style.height = (userInput.scrollHeight) + 'px';
+    }
+
+
+    // --- FUNCIONES PARA LA ANIMACIÓN ---
 
     // Función para mostrar la animación de "pensando"
     function showThinkingIndicator() {
@@ -27,22 +44,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Función para escribir la respuesta del bot por partes
-    function typeResponse(text) {
+    // Función para escribir la respuesta del bot linea por linea
+    function typeResponseLineByLine(text) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', 'bot-message');
         globalMessages.appendChild(messageDiv);
-        
-        let i = 0;
-        function typeWriter() {
-            if (i < text.length) {
-                messageDiv.textContent += text.charAt(i);
-                i++;
+
+        const lines = text.split('\n');
+        let lineIndex = 0;
+
+        function typeLine() {
+            if (lineIndex < lines.length) {
+                messageDiv.innerHTML += lines[lineIndex] + '<br>';
+                lineIndex++;
                 scrollToBottom();
-                setTimeout(typeWriter, 15);
+                setTimeout(typeLine, 400); // Pausa de 400ms entre líneas
             }
         }
-        typeWriter();
+        typeLine();
     }
     
     // --- LÓGICA PRINCIPAL ---
