@@ -47,8 +47,10 @@ body {
     flex-shrink: 0; 
 }
 
-.star-container { 
-    border: 3px solid #326EAB;
+.star-container img {
+    width: 150%;
+    height: 150%;
+    object-fit: contain; /* o 'cover' si prefieres que rellene el espacio */
 }
 
 h1 { 

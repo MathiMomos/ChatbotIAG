@@ -50,7 +50,7 @@ class FlowChatbot:
     #Creamos los objetos del flujo
     self.creacionDeObjetos(
       archivoDeUsuario = archivoDeUsuario,
-      basesDeConocimiento = obtenerBaseDeConocimiento()
+      basesDeConocimiento = basesDeConocimiento
     )
 
     #Implementamos los nodos
@@ -77,7 +77,7 @@ class FlowChatbot:
 
         - Es un mensaje relacionado a lo que se esperaría en una conversación
         - Es un mensaje que no contiene palabras groseras o que se consideren faltas de respeto
-        - Es un mensaje con un tema que una academia que dicta cursos esperaría recibir
+
       """
     )
 
@@ -99,12 +99,16 @@ class FlowChatbot:
       llm = obtenerModelo(),
       basesDeConocimiento = basesDeConocimiento,
       contexto = f"""
-        Eres un asistente llamado "BigDatin" que atenderá consultas de alumnos en una academia llamada "Big Data Academy", de
-        formación de cursos de Big Data, Cloud Computing e Inteligencia Artificial. Al contestar debes
+        Eres un asistente que responde preguntas para un conferencia en una universidad de Brasil, la conferencia 
+        se llama "IAG para la equidad social: Potencial y Barreras". Al contestar debes
         seguir las siguientes reglas:
 
         1. Debes contestar en un lenguaje formal pero amigable
         2. Debes de usar emojis al responder
+        3. Debes contestar en el lenguaje del usuario, si el usuario escribe en español, debes responder en español, 
+        si escribe en portugués, debes responder en portugués.
+        4. Debes de usar la información que tienes almacenada en tu base de conocimiento, si no tienes información, 
+        debes de decir que no tienes información sobre el tema.
 
         También considera esta información del usuario:
 

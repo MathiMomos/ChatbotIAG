@@ -1,115 +1,102 @@
 document.addEventListener('DOMContentLoaded', function() {
     const userInput = document.getElementById('user-input');
     const globalMessages = document.getElementById('global-messages');
-
     const focoButton = document.getElementById('foco-button');
 
+    // 1. Variable para guardar el estado del foco
+    let usarBaseConocimiento = true;
+
     focoButton.addEventListener('click', function() {
-        // Click para cambiar color por ahora
         this.classList.toggle('active');
+        // 2. Actualiza el estado cada vez que se hace clic
+        usarBaseConocimiento = !usarBaseConocimiento;
+        console.log("Usar base de conocimiento:", usarBaseConocimiento);
     });
 
 
-    // --- FUNCIONES SROLL TEXTAREA Y AJUSTE ---
-
-    // Función para hacer scroll hacia abajo
+    // --- El resto de tus funciones (scrollToBottom, adjustTextareaHeight, etc.) va aquí ---
+    // --- No necesitan cambios ---
     function scrollToBottom() {
         globalMessages.scrollTop = globalMessages.scrollHeight;
     }
 
-    // Función para ajustar la altura del textarea
     function adjustTextareaHeight() {
-        userInput.style.height = 'auto';
-        userInput.style.height = (userInput.scrollHeight) + 'px';
+        userInput.style.height = 'auto'; userInput.style.height = (userInput.scrollHeight) + 'px';
     }
 
-
-    // --- FUNCIONES PARA LA ANIMACIÓN ---
-
-    // Función para mostrar la animación de "pensando"
     function showThinkingIndicator() {
         const indicatorDiv = document.createElement('div');
         indicatorDiv.classList.add('message', 'bot-message', 'typing-indicator');
         indicatorDiv.id = 'thinking-indicator';
         indicatorDiv.innerHTML = `<span></span><span></span><span></span>`;
-        globalMessages.appendChild(indicatorDiv);
-        scrollToBottom();
+        globalMessages.appendChild(indicatorDiv); scrollToBottom();
     }
 
-    // Función para quitar la animación
     function hideThinkingIndicator() {
         const indicator = document.getElementById('thinking-indicator');
-        if (indicator) {
-            indicator.remove();
+        if (indicator) { indicator.remove();
         }
     }
-
-    // Función para escribir la respuesta del bot linea por linea
     function typeResponseLineByLine(text) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', 'bot-message');
         globalMessages.appendChild(messageDiv);
-
         const lines = text.split('\n');
         let lineIndex = 0;
-
         function typeLine() {
             if (lineIndex < lines.length) {
-                messageDiv.innerHTML += lines[lineIndex] + '<br>';
-                lineIndex++;
+                messageDiv.innerHTML += lines[lineIndex] + '<br>'; lineIndex++;
                 scrollToBottom();
-                setTimeout(typeLine, 400); // Pausa de 400ms entre líneas
-            }
-        }
-        typeLine();
+                setTimeout(typeLine, 400); } } typeLine();
     }
-    
-    // --- LÓGICA PRINCIPAL ---
+    function addMessage(text, sender) { const messageDiv = document.createElement('div'); messageDiv.classList.add('message', `${sender}-message`); messageDiv.textContent = text; globalMessages.appendChild(messageDiv); scrollToBottom(); }
 
-    // Función para añadir un mensaje al chat
-    function addMessage(text, sender) {
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message', `${sender}-message`);
-        messageDiv.textContent = text;
-        globalMessages.appendChild(messageDiv);
-        scrollToBottom();
-    }
 
-    // Función para enviar el mensaje (ahora solo llamada por enter)
+    // --- LÓGICA PRINCIPAL (MODIFICADA) ---
+
     function sendMessage() {
         const messageText = userInput.value.trim();
         if (messageText) {
             addMessage(messageText, 'user');
             userInput.value = '';
+            adjustTextareaHeight();
 
-            // --- Inicio de la sección modificada ---
-            // 1. Muestra la animación de "pensando"
             showThinkingIndicator();
 
-            // 2. Espera 2 segundos para simular que piensa
             setTimeout(() => {
-                // 3. Llama a la API para obtener la respuesta
+                // 3. Modifica la llamada fetch para enviar un JSON
                 fetch('/chat', {
                     method: 'POST',
-                    body: messageText // Se envía el texto directamente
+                    headers: {
+                        'Content-Type': 'application/json' // Especifica que envías JSON
+                    },
+                    body: JSON.stringify({
+                        prompt: messageText,
+                        usar_base: usarBaseConocimiento // Envía el estado actual del foco
+                    })
                 })
-                .then(response => response.text()) // Se espera una respuesta de texto
+                .then(response => response.text())
                 .then(text => {
-                    hideThinkingIndicator(); // 4. Oculta la animación
-                    typeResponse(text); // 5. Muestra la respuesta letra por letra
+                    hideThinkingIndicator();
+                    // Aquí deberías usar tu función para escribir linea por linea si la tienes
+                    typeResponseLineByLine(text);
                 })
                 .catch(error => {
                     console.error('Error al enviar mensaje:', error);
                     hideThinkingIndicator();
-                    typeResponse('Lo siento, algo salió mal. Inténtalo de nuevo.');
+                    typeResponseLineByLine('Lo siento, algo salió mal. Inténtalo de nuevo.');
                 });
-            }, 2000); // 2000ms = 2 segundos de espera
+            }, 500); // Reduje el tiempo de espera a 0.5s, ajústalo a tu gusto
         }
     }
 
     userInput.addEventListener('keypress', function(event) {
-        if (event.key === 'Enter') {
+        // Permite enviar con Enter y crear nueva linea con Shift + Enter
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault(); // Evita que se cree una nueva línea en el textarea
             sendMessage();
         }
     });
+
+    userInput.addEventListener('input', adjustTextareaHeight);
 });
