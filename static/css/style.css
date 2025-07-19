@@ -276,6 +276,37 @@ h1 {
     animation-delay: -0.16s; 
 }
 
+#mic-button {
+    background-color: #d7e1e6;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background-color 0.2s;
+}
+
+#mic-button svg {
+    width: 24px;
+    height: 24px;
+    fill: #5C3273;
+}
+
+#mic-button:hover {
+    background-color: #c8d0d5;
+}
+
+#mic-button.active svg {
+    fill: #ffffff;
+}
+
+#mic-button.active {
+    background-color: #5C3273;
+}
 @keyframes bounce {
     0%, 80%, 100% { 
         transform: scale(0); 

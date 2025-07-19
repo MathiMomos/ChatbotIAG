@@ -6,3 +6,6 @@ pypdf
 azure-search-documents
 azure-ai-formrecognizer
 python-dotenv
+azure-cognitiveservices-speech
+flask
+langgraph

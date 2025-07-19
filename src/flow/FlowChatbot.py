@@ -219,23 +219,23 @@ class FlowChatbot:
 
     #Nodo de Agente de Chatbot
     def node_a5_agenteDeChatbot(state: dict) -> dict:
-      #Definimos la salida
+    # Definimos la salida
       output = state
       output["output"] = {}
 
-      #Imprimimos un mensaje para saber en qué nodo estamos
+      # Imprimimos un mensaje para saber en qué nodo estamos
       print("Ejecutando node_a5_agenteDeChatbot...")
 
-      #Obtenemos los parámetros
-      prompt = state["prompt"]
+      # Obtenemos los parámetros
+      contenido = state["prompt"]["contenido"]
 
-      #Ejecutamos el agente
-      respuesta = self.agenteDeChatbot.enviarMensaje(prompt)
+      # Ejecutamos el agente
+      respuesta = self.agenteDeChatbot.enviarMensaje(contenido)
 
-      #Construimos la salida
+      # Construimos la salida
       output["output"]["respuesta"] = respuesta
 
-      #Devolvemos la salida
+      # Devolvemos la salida
       return output
 
     #Construimos un grafo que recibe JSONs
@@ -275,6 +275,17 @@ class FlowChatbot:
     #Construimos el grafo
     self.grafo = self.constructor.compile()
 
+  def preparar_prompt(promptUsuario):
+    if isinstance(promptUsuario, dict) and "tipo" in promptUsuario:
+        # Ya viene en formato correcto
+        return promptUsuario
+    
+    # Si el usuario envía simplemente un string, lo formateamos como texto
+    return {
+        "tipo": "texto",
+        "contenido": promptUsuario
+    }
+  
   #Ejecución
   def ejecutar(self, prompt):
 
