@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="GBrowserService"><![CDATA[{
+  "defaultHomePage": "http://127.0.0.1:5000",
   "history": [
     {
       "name": "GBrowser - IntelliJ IDEs Plugin | Marketplace",
@@ -9,6 +10,10 @@
     {
       "name": "Mi Primera App Flask",
       "url": "http://127.0.0.1:5000/"
+    },
+    {
+      "name": "",
+      "url": "http://127.0.0.1:5000"
     }
   ]
 }]]></component>

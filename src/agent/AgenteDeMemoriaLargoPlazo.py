@@ -46,14 +46,14 @@ class AgenteDeMemoriaLargoPlazo:
 
       Para cada información detectada en ese mensaje, devolverás un JSON con estas 2 variables
 
-      - "estado": INFORMACION_POR_RECORDAR
+      - "status": "INFORMACION_POR_RECORDAR"
       - "informacion": Un párrafo de texto, en donde cada oración del párrafo diga exactamente lo siguiente "El usuario afirma que INFORMACION_DETECTADA",
       donde "INFORMACION_DETECTADA" es la información que se detectó respecto a alguno de esos puntos. Habrán tantas oraciones en
       el párrafo como informaciones detectadas
 
       Si no detectas nada, devolverás un JSON con 1 variable
 
-      - "estado": NO_SE_DETECTO_INFORMACION_POR_RECORDAR
+      - "status": "NO_INFORMACION_POR_RECORDAR"
 
       Este es el mensaje:
 
@@ -81,7 +81,7 @@ class AgenteDeMemoriaLargoPlazo:
         respuesta = json.loads(respuestaDelModelo)
     except Exception as e:
         respuesta = {
-            "estado": "ERROR",
+            "status": "ERROR",
             "message": f"Ocurrió un error al parsear la respuesta del modelo: {respuestaDelModelo}"
         }
 

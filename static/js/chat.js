@@ -47,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (lineIndex < lines.length) {
                 messageDiv.innerHTML += lines[lineIndex] + '<br>'; lineIndex++;
                 scrollToBottom();
-                setTimeout(typeLine, 400); } } typeLine();
+                setTimeout(typeLine, 20); } } typeLine();
     }
     function addMessage(text, sender) { const messageDiv = document.createElement('div'); messageDiv.classList.add('message', `${sender}-message`); messageDiv.textContent = text; globalMessages.appendChild(messageDiv); scrollToBottom(); }
 
