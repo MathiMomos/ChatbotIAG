@@ -1,93 +1,19 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function() {
     const userInput = document.getElementById('user-input');
     const globalMessages = document.getElementById('global-messages');
     const focoButton = document.getElementById('foco-button');
-    const micButton = document.getElementById('mic-button');
-    let mediaRecorder;
-    let audioChunks = [];
-    let isRecording = false;
 
     // 1. Variable para guardar el estado del foco
     let usarBaseConocimiento = true;
 
-    focoButton.addEventListener('click', function () {
+    focoButton.addEventListener('click', function() {
         this.classList.toggle('active');
         // 2. Actualiza el estado cada vez que se hace clic
         usarBaseConocimiento = !usarBaseConocimiento;
         console.log("Usar base de conocimiento:", usarBaseConocimiento);
     });
 
-    async function startRecording() {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
-        audioChunks = [];
 
-        mediaRecorder.addEventListener('dataavailable', event => {
-            audioChunks.push(event.data);
-        });
-
-        mediaRecorder.addEventListener('stop', handleAudioStop);
-
-        mediaRecorder.start();
-        console.log('🎙️ Grabando...');
-        isRecording = true;
-        micButton.classList.add('recording');
-    }
-
-    async function handleAudioStop() {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        const audioUrl = URL.createObjectURL(audioBlob);
-
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message', 'user-message');
-        messageDiv.innerHTML = `<audio controls src="${audioUrl}"></audio>`;
-        globalMessages.appendChild(messageDiv);
-        scrollToBottom();
-
-        showThinkingIndicator();
-
-        const arrayBuffer = await audioBlob.arrayBuffer();
-        const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-
-        fetch('/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                usar_base: usarBaseConocimiento,
-                prompt: {
-                    tipo: 'audio',
-                    contenido: base64Audio,
-                    mime_type: 'audio/webm'
-                }
-            })
-        })
-            .then(resp => resp.json())
-            .then(data => {
-                hideThinkingIndicator();
-                typeResponseLineByLine(data.respuesta);
-            })
-            .catch(err => {
-                console.error(err);
-                hideThinkingIndicator();
-                typeResponseLineByLine('Lo siento, algo salió mal al procesar tu audio.');
-            });
-    }
-
-    // Función para detener la grabación
-    function stopRecording() {
-        if (mediaRecorder && isRecording) {
-            mediaRecorder.stop();
-            isRecording = false;
-            micButton.classList.remove('recording');
-        }
-    }
-    micButton.addEventListener('click', () => {
-        if (!isRecording) {
-            startRecording();
-        } else {
-            stopRecording();
-        }
-    });
     // --- El resto de tus funciones (scrollToBottom, adjustTextareaHeight, etc.) va aquí ---
     // --- No necesitan cambios ---
     function scrollToBottom() {
@@ -108,8 +34,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function hideThinkingIndicator() {
         const indicator = document.getElementById('thinking-indicator');
-        if (indicator) {
-            indicator.remove();
+        if (indicator) { indicator.remove();
         }
     }
     function typeResponseLineByLine(text) {
@@ -122,9 +47,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (lineIndex < lines.length) {
                 messageDiv.innerHTML += lines[lineIndex] + '<br>'; lineIndex++;
                 scrollToBottom();
-                setTimeout(typeLine, 400);
-            }
-        } typeLine();
+                setTimeout(typeLine, 400); } } typeLine();
     }
     function addMessage(text, sender) { const messageDiv = document.createElement('div'); messageDiv.classList.add('message', `${sender}-message`); messageDiv.textContent = text; globalMessages.appendChild(messageDiv); scrollToBottom(); }
 
@@ -144,30 +67,30 @@ document.addEventListener('DOMContentLoaded', function () {
                 // 3. Modifica la llamada fetch para enviar un JSON
                 fetch('/chat', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json' // Especifica que envías JSON
+                    },
                     body: JSON.stringify({
-                        usar_base: usarBaseConocimiento,
-                        prompt: {
-                            tipo: 'texto',
-                            contenido: messageText
-                        }
+                        prompt: messageText,
+                        usar_base: usarBaseConocimiento // Envía el estado actual del foco
                     })
                 })
-                    .then(response => response.json())
-                    .then(data => {
-                        hideThinkingIndicator();
-                        typeResponseLineByLine(data.respuesta);
-                    })
-                    .catch(error => {
-                        console.error('Error al enviar mensaje:', error);
-                        hideThinkingIndicator();
-                        typeResponseLineByLine('Lo siento, algo salió mal. Inténtalo de nuevo.');
-                    });
+                .then(response => response.text())
+                .then(text => {
+                    hideThinkingIndicator();
+                    // Aquí deberías usar tu función para escribir linea por linea si la tienes
+                    typeResponseLineByLine(text);
+                })
+                .catch(error => {
+                    console.error('Error al enviar mensaje:', error);
+                    hideThinkingIndicator();
+                    typeResponseLineByLine('Lo siento, algo salió mal. Inténtalo de nuevo.');
+                });
             }, 500); // Reduje el tiempo de espera a 0.5s, ajústalo a tu gusto
         }
     }
 
-    userInput.addEventListener('keypress', function (event) {
+    userInput.addEventListener('keypress', function(event) {
         // Permite enviar con Enter y crear nueva linea con Shift + Enter
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault(); // Evita que se cree una nueva línea en el textarea
@@ -176,6 +99,30 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     userInput.addEventListener('input', adjustTextareaHeight);
+});
 
-    
+document.getElementById('foco-button').addEventListener('click', () => {
+    const input = document.getElementById('user-input');
+    const userMessage = input.value.trim();
+
+    if (userMessage === "") return;
+
+    const welcome = document.getElementById('welcome-message');
+    if (welcome) {
+        // Aplica animación
+        welcome.classList.add('fade-out');
+
+        // Luego de la animación, remueve el elemento
+        setTimeout(() => {
+            welcome.remove();
+        }, 500); // tiempo igual al transition del CSS
+    }
+
+    // Crear y agregar el mensaje del usuario
+    const userDiv = document.createElement('div');
+    userDiv.className = 'message user-message';
+    userDiv.textContent = userMessage;
+
+    document.getElementById('global-messages').appendChild(userDiv);
+    input.value = "";
 });

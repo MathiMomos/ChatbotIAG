@@ -260,9 +260,9 @@ class FlowChatbot:
     })
 
     #Agregamos un flujo condicional
-    self.constructor.add_conditional_edges("node_a3_agenteDeMemoriaLargoPlazo", lambda state: state["node_a3_agenteDeMemoriaLargoPlazo"]["estado"], {
+    self.constructor.add_conditional_edges("node_a3_agenteDeMemoriaLargoPlazo", lambda state: state["node_a3_agenteDeMemoriaLargoPlazo"]["status"], {
         "INFORMACION_POR_RECORDAR": "node_a4_informacionPorRecordar",
-        "NO_SE_DETECTO_INFORMACION_POR_RECORDAR": "node_a5_agenteDeChatbot"
+        "NO_INFORMACION_POR_RECORDAR": "node_a5_agenteDeChatbot"
     })
 
     #Conectamos un flujo secuencial
