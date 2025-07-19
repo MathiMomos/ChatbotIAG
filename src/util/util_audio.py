@@ -2,24 +2,48 @@ import base64
 import tempfile
 import src.util.util_env as key
 from azure.cognitiveservices.speech import SpeechConfig, SpeechRecognizer, AudioConfig, AutoDetectSourceLanguageConfig
+import os
+import subprocess
 
-import io
-from pydub import AudioSegment
+def detectar_formato_audio(audio_bytes):
+    if audio_bytes.startswith(b'OggS'):
+        return "ogg"
+    elif audio_bytes[0:4] == b'RIFF' and audio_bytes[8:12] == b'WAVE':
+        return "wav"
+    elif audio_bytes[0:4] == b'\x1A\x45\xDF\xA3':
+        return "webm"  # Matroska/WebM
+    else:
+        return "ogg"  # Por defecto si no sabes, asume ogg
+    
+    
 
-def convertir_webm_base64_a_wav_bytes(audio_base64):
-    # Paso 1: Decodificar base64
+def convertir_audio_base64_a_wav_bytes(audio_base64, formato="ogg"):
     audio_bytes = base64.b64decode(audio_base64)
-    # Paso 2: Cargar el audio webm en pydub
-    audio = AudioSegment.from_file(io.BytesIO(audio_bytes), format="ogg")
 
-    # Paso 3: Exportarlo a WAV en bytes
-    wav_io = io.BytesIO()
-    audio.export(wav_io, format="wav")
-    wav_io.seek(0)
-    return wav_io.read()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=f".{formato}") as temp_input:
+        temp_input.write(audio_bytes)
+        temp_input.flush()
+        input_path = temp_input.name
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_output:
+        output_path = temp_output.name
+
+    subprocess.run([
+        "ffmpeg", "-y", "-i", input_path, output_path
+    ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    with open(output_path, "rb") as f:
+        wav_bytes = f.read()
+
+    os.remove(input_path)
+    os.remove(output_path)
+
+    return wav_bytes
 
 def transcribir_audio_base64_a_texto(audio_base64):
-    audio_bytes = convertir_webm_base64_a_wav_bytes(audio_base64)
+    audio_bytes = base64.b64decode(audio_base64)
+    formato = detectar_formato_audio(audio_bytes)
+    audio_bytes = convertir_audio_base64_a_wav_bytes(audio_base64, formato=formato)
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_audio:
         temp_audio.write(audio_bytes)
