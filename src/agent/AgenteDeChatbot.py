@@ -46,20 +46,6 @@ class AgenteDeChatbot:
                 basesDeConocimiento=self.basesDeConocimiento,
             )
 
-    def enviarAudio(
-        self, audio_base64, mime_type="audio/wav", mensaje_texto="¿Qué dice este audio?"
-    ):
-        # Cuerpo del mensaje combinado
-        mensaje = [
-            {"type": "text", "text": mensaje_texto},
-            {"type": "audio", "audio": {"data": audio_base64, "mime_type": mime_type}},
-        ]
-
-        # Enviar usando la misma sesión
-        respuesta = enviarMensaje(chat=self.chat, mensaje=mensaje)
-
-        return respuesta
-
     # Envía un mensaje
     def enviarMensaje(self, prompt=None):
         respuesta = ""
