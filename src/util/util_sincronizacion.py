@@ -14,6 +14,7 @@ import src.util.util_env as key
 ## ################q######################################################################################
 ## @section Librerías
 ## #######################################################################################################
+import src.util.util_excel as excel_util
 
 #Utilitario para recortar el documento
 from langchain.text_splitter import CharacterTextSplitter
@@ -155,48 +156,50 @@ def cargarArchivo(
 
 #Sincroniza los documentos de una ruta a una base de conocimiento
 def sincronizarBaseDeConocimiento(
-    carpeta = None,
-    nombreDeBaseDeConocimiento = None,
-    tiempoDeEspera = None
+    carpeta=None,
+    nombreDeBaseDeConocimiento=None,
+    tiempoDeEspera=None
 ):
-  #Bucle infinito
-  while True:
-    print("Ejecutando sincronizacion...")
+    archivos_procesados = set()  # Guardamos nombres de archivos ya procesados
 
-    #Obtenemos los archivos de la ruta
-    listaDeArchivos = obtenerArchivos(
-      ruta = carpeta
-    )
+    while True:
+        print("Ejecutando sincronización...")
 
-    #Verificamos si hay al menos 1 archivo
-    if len(listaDeArchivos) >= 1:
+        listaDeArchivos = obtenerArchivos(ruta=carpeta)
 
-      #Iteramos la lista de archivos
-      for archivo in listaDeArchivos:
-        print(f"Cargando archivo: {archivo}")
+        if len(listaDeArchivos) >= 1:
+            for archivo in listaDeArchivos:
+                nombre_archivo = os.path.basename(archivo)
 
-        try:
-          #Cargamos el archivo
-          resultadosDeInserciones = cargarArchivo(
-            rutaDeArchivo = archivo,
-            nombreDeBaseDeConocimiento = nombreDeBaseDeConocimiento
-          )
+                # Saltamos si ya fue procesado
+                if nombre_archivo in archivos_procesados:
+                    continue
 
-          #Eliminamos el archivo
-          os.remove(archivo)
+                print(f"Cargando archivo: {archivo}")
 
-        except Exception as e:
-          print(f"Ocurrió un error al sincronizar: {e}")
+                try:
+                    if excel_util.esArchivoExcel(archivo):
+                        print("Archivo Excel detectado.")
+                        resultados = excel_util.cargarArchivoExcel(
+                            rutaDeArchivo=archivo,
+                            nombreDeBaseDeConocimiento=nombreDeBaseDeConocimiento
+                        )
+                        archivos_procesados.add(nombre_archivo)  # Marcamos como procesado
+                        continue
 
-          #Definimos la carpeta de "_errores"
-          carpetaDeErrores = os.path.join(carpeta, "_errores/", str(uuid.uuid4())+"/")
-          print(f"Moviendo archivo a carpeta de errores: {carpetaDeErrores}")
+                    # Si no es Excel, sigue el flujo normal
+                    resultadosDeInserciones = cargarArchivo(
+                        rutaDeArchivo=archivo,
+                        nombreDeBaseDeConocimiento=nombreDeBaseDeConocimiento
+                    )
+                    os.remove(archivo)
+                    print("Archivo procesado y eliminado correctamente.")
 
-          #Creamos la carpeta de "_errores"
-          os.makedirs(carpetaDeErrores)
+                except Exception as e:
+                    print(f"Ocurrió un error al sincronizar: {e}")
+                    carpetaDeErrores = os.path.join(carpeta, "_errores/", str(uuid.uuid4()) + "/")
+                    print(f"Moviendo archivo a carpeta de errores: {carpetaDeErrores}")
+                    os.makedirs(carpetaDeErrores, exist_ok=True)
+                    shutil.move(archivo, carpetaDeErrores)
 
-          #Movemos el archivo a la carpeta errores
-          shutil.move(archivo, carpetaDeErrores)
-
-    #Esperamos antes de repetir el bucle
-    time.sleep(tiempoDeEspera)
+        time.sleep(tiempoDeEspera)
