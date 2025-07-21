@@ -3,9 +3,15 @@ document.addEventListener('DOMContentLoaded', function () {
     const globalMessages = document.getElementById('global-messages');
     const focoButton = document.getElementById('foco-button');
     const micButton = document.getElementById('mic-button');
+    const enviarButton = document.getElementById('enviar-button');
+    const pausarButton = document.getElementById('pausar-button');
+
     let mediaRecorder;
     let audioChunks = [];
     let isRecording = false;
+    let audioStream;
+    let typeWriterTimeout;
+    let stopTypingRequested = false;
 
     let audioPlayerId = 0; //id unico para cada audio
 
@@ -19,9 +25,26 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log("Usar base de conocimiento:", usarBaseConocimiento);
     });
 
+
+    // Click y envia mensaje
+    enviarButton.addEventListener('click', sendMessage);
+
+    // Evento enviar
+    userInput.addEventListener('keypress', function (event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage();
+        }
+    });
+
+    // Evento pausar animacion
+    pausarButton.addEventListener('click', () => {
+        stopTypingRequested = true;
+    });
+
     async function startRecording() {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
+        audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(audioStream);
         audioChunks = [];
 
         mediaRecorder.addEventListener('dataavailable', event => {
@@ -222,6 +245,7 @@ document.addEventListener('DOMContentLoaded', function () {
             mediaRecorder.stop();
             isRecording = false;
             micButton.classList.remove('recording');
+            audioStream.getTracks().forEach(track => track.stop());
         }
     }
     micButton.addEventListener('click', () => {
@@ -231,14 +255,15 @@ document.addEventListener('DOMContentLoaded', function () {
             stopRecording();
         }
     });
-    // --- El resto de tus funciones (scrollToBottom, adjustTextareaHeight, etc.) va aquí ---
-    // --- No necesitan cambios ---
+    
     function scrollToBottom() {
         globalMessages.scrollTop = globalMessages.scrollHeight;
     }
 
     function adjustTextareaHeight() {
-        userInput.style.height = 'auto'; userInput.style.height = (userInput.scrollHeight) + 'px';
+        userInput.style.height = 'auto'; 
+        userInput.style.height = (userInput.scrollHeight) + 'px';
+        userInput.scrollTop = userInput.scrollHeight;
     }
 
     function showThinkingIndicator() {
@@ -258,22 +283,55 @@ document.addEventListener('DOMContentLoaded', function () {
     
     // ESTILO MARKDOWN
     function renderBotResponse(markdownText) {
+    //Reinicia el contenerdor y crea el
+    stopTypingRequested = false; 
     const messageDiv = document.createElement('div');
     messageDiv.classList.add('message', 'bot-message');
-
-    // convierte Markdown a HTML
-    messageDiv.innerHTML = marked.parse(markdownText);
-
-    messageDiv.querySelectorAll('pre code').forEach((block) => {
-        hljs.highlightElement(block);
-    });
-
     globalMessages.appendChild(messageDiv);
-    scrollToBottom();
+    
+    //Intercambia botones
+    enviarButton.style.display = 'none';
+    pausarButton.style.display = 'flex';
+
+    let i = 0;
+    const speed = 30;
+
+    function typeWriter() {
+        // Se detiene al click
+        if (i >= markdownText.length || stopTypingRequested) {
+            clearTimeout(typeWriterTimeout);
+            messageDiv.innerHTML = marked.parse(markdownText);
+            messageDiv.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+
+            pausarButton.style.display = 'none';
+            enviarButton.style.display = 'flex';
+        
+            scrollToBottom();
+            return;
+        }
+
+        // Si no se detiene, continúa la animación
+        messageDiv.innerHTML = marked.parse(markdownText.substring(0, i + 1) + '▌');
+        i++;
+        scrollToBottom();
+        
+        // Continúa el bucle de la animación
+        typeWriterTimeout = setTimeout(typeWriter, speed);
+    }
+
+    // Inicia la animación
+    typeWriter();
 }
 
-    function addMessage(text, sender) { const messageDiv = document.createElement('div'); messageDiv.classList.add('message', `${sender}-message`); messageDiv.textContent = text; globalMessages.appendChild(messageDiv); scrollToBottom(); }
-
+    function addMessage(text, sender) { 
+        const messageDiv = document.createElement('div'); 
+        messageDiv.classList.add('message', `${sender}-message`); 
+        messageDiv.textContent = text; 
+        globalMessages.appendChild(messageDiv); 
+        scrollToBottom(); 
+    }
 
     // --- LÓGICA PRINCIPAL (MODIFICADA) ---
 
@@ -309,7 +367,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         hideThinkingIndicator();
                         renderBotResponse('Lo siento, algo salió mal. Inténtalo de nuevo.');
                     });
-            }, 500); // Reduje el tiempo de espera a 0.5s, ajústalo a tu gusto
+            }, 500); // Reduje el tiempo de espera a 0.5s
         }
     }
 
