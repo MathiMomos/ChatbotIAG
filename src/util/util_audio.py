@@ -43,7 +43,8 @@ def convertir_audio_base64_a_wav_bytes(audio_base64, formato="ogg"):
 def transcribir_audio_base64_a_texto(audio_base64):
     audio_bytes = base64.b64decode(audio_base64)
     formato = detectar_formato_audio(audio_bytes)
-    audio_bytes = convertir_audio_base64_a_wav_bytes(audio_base64, formato=formato)
+    if formato != "wav":
+        audio_bytes = convertir_audio_base64_a_wav_bytes(audio_base64, formato=formato)
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_audio:
         temp_audio.write(audio_bytes)
