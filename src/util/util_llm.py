@@ -18,7 +18,7 @@ import src.util.util_env as key
 ## #######################################################################################################
 
 #Utilitario de conexión a Azure OpenAI
-from langchain_openai import AzureChatOpenAI
+from langchain_openai import AzureChatOpenAI, AzureOpenAI
 
 ## #######################################################################################################
 ## @section Funciones
@@ -30,8 +30,18 @@ def obtenerModelo():
   llm = AzureChatOpenAI(
       api_version = key.require("CONF_API_VERSION"),
       azure_endpoint = key.require("CONF_AZURE_ENDPOINT"),
-      openai_api_key = key.require("CONF_OPENAI_API_KEY"),
+      openai_api_key = key.require("CONF_OPENAI_API_KEY"), # type: ignore
       azure_deployment = key.require("CONF_AZURE_DEPLOYMENT")
+  )
+
+  return llm
+
+def obtenerModeloImagen():
+  #Conexión a un modelo de imágenes
+  llm = AzureOpenAI(
+      api_version = key.require("CONF_API_VERSION_IMAGE"),
+      azure_endpoint = key.require("CONF_AZURE_ENDPOINT_IMAGE"),
+      openai_api_key = key.require("CONF_OPENAI_API_KEY_IMAGE"), # type: ignore
   )
 
   return llm
