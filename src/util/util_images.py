@@ -1,5 +1,4 @@
-import util_llm as util_llm
-import util_env as key
+import src.util.util_env as key
 from openai import AzureOpenAI
 
 def responderImagen(client: AzureOpenAI, prompt: str):
