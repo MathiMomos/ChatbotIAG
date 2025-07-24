@@ -6,6 +6,11 @@ from src.util import util_bases_de_conocimiento as ubc
 from src.util import util_audio as ua
 app = Flask(__name__)
 
+chatbot = FlowChatbot(
+    archivoDeUsuario=key.require("ARCHIVO_USUARIO_DIR"),
+    basesDeConocimiento=ubc.obtenerBaseDeConocimiento(),
+)
+
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -16,6 +21,7 @@ def chat():
     datos = request.get_json()
     
     promptUsuario = datos.get('prompt')
+    usarBase = datos.get('usar_base')
     tipo = promptUsuario.get('tipo')
     if tipo == 'audio':
         promptUsuario = {
@@ -28,25 +34,11 @@ def chat():
             "contenido": promptUsuario["contenido"]
             }
     print("FLASK ENVIA AL FLUJO:", promptUsuario)
-    usar_base = datos.get('usar_base', False) # Recibe el estado del foco
 
-    chatbot = None
 
-    # 2. Decide cómo instanciar el chatbot
-    if usar_base:
-        print("INFO: Creando chatbot CON base de conocimiento.")
-        chatbot = FlowChatbot(
-            archivoDeUsuario = key.require("ARCHIVO_USUARIO_DIR"),
-            basesDeConocimiento=ubc.obtenerBaseDeConocimiento(),
-        )
-    else:
-        print("INFO: Creando chatbot SIN base de conocimiento.")
-        chatbot = FlowChatbot(
-            archivoDeUsuario = key.require("ARCHIVO_USUARIO_DIR")
-        )
 
     # 3. Ejecuta el flujo y devuelve la respuesta
-    respuestaModelo = chatbot.ejecutar(prompt=promptUsuario)
+    respuestaModelo = chatbot.ejecutar(prompt=promptUsuario, base=usarBase)
     return jsonify({"respuesta": respuestaModelo})
 
 

@@ -104,11 +104,10 @@ class FlowChatbot:
         seguir las siguientes reglas:
 
         1. Debes contestar en un lenguaje formal pero amigable
-        2. Debes de usar emojis al responder
-        3. Debes contestar en el lenguaje del usuario, si el usuario escribe en español, debes responder en español, 
-        si escribe en portugués, debes responder en portugués.
-        4. Debes de usar la información que tienes almacenada en tu base de conocimiento, si no tienes información, 
-        debes de decir que no tienes información sobre el tema.
+        2. Debes contestar en el lenguaje del usuario, por ejemplo, si el usuario escribe en español, debes responder en español
+        3. Debes de usar la información que tienes almacenada en tu base de conocimiento, si no tienes información, 
+        debes de decir "No tengo información sobre el tema"
+        4. Debes generar una imagen si un usuario dice explicitamente "Quiero una imagen" o "Quiero una imagen de algo"
 
         También considera esta información del usuario:
 
@@ -228,9 +227,10 @@ class FlowChatbot:
 
       # Obtenemos los parámetros
       contenido = state["prompt"]["contenido"]
+      base = state["base"]
 
       # Ejecutamos el agente
-      respuesta = self.agenteDeChatbot.enviarMensaje(contenido)
+      respuesta = self.agenteDeChatbot.enviarMensaje(contenido, base)
 
       # Construimos la salida
       output["output"]["respuesta"] = respuesta
@@ -287,11 +287,11 @@ class FlowChatbot:
     }
   
   #Ejecución
-  def ejecutar(self, prompt):
+  def ejecutar(self, prompt, base):
 
     #Ejecutamos el grafo
     respuesta = self.grafo.invoke(
-      {"prompt": prompt}
+      {"prompt": prompt, "base": base}
     )
 
     #Devolvemos la respuesta

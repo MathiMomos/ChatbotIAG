@@ -294,7 +294,7 @@ document.addEventListener('DOMContentLoaded', function () {
     pausarButton.style.display = 'flex';
 
     let i = 0;
-    const speed = 30;
+    const speed = 2;
 
     function typeWriter() {
         // Se detiene al click
@@ -367,7 +367,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         hideThinkingIndicator();
                         renderBotResponse('Lo siento, algo salió mal. Inténtalo de nuevo.');
                     });
-            }, 500); // Reduje el tiempo de espera a 0.5s
+            }, 0); // Reduje el tiempo de espera a 0.5s
         }
     }
 

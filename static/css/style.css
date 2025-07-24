@@ -204,7 +204,7 @@ h1 {
 }
 
 .action-button {
-    background-color: #601dbd;
+    background-color: #5C3273;
     border: none;
     border-radius: 50%;
     width: 50px;
@@ -249,11 +249,11 @@ h1 {
 }
 
 #foco-button.active {
-    background-color: #601dbd;
+    background-color: #5C3273;
 }
 
 #foco-button.active svg {
-    fill: #601dbd;
+    fill: #5C3273;
     stroke: #ffffff;
 }
 
