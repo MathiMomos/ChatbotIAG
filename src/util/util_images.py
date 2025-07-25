@@ -1,6 +1,5 @@
 import src.util.util_env as key
 from openai import AzureOpenAI
-
 def responderImagen(client: AzureOpenAI, prompt: str):
     """
     Genera una imagen de 1024x1024 píxeles usando Azure OpenAI (DALL·E 3).
@@ -17,3 +16,4 @@ def responderImagen(client: AzureOpenAI, prompt: str):
         raise ValueError("No se pudo generar la imagen. Verifica el prompt o la configuración.")
 
     return respuesta.data[0].url
+

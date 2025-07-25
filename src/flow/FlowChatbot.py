@@ -151,7 +151,6 @@ class FlowChatbot:
       output["node_a1_agenteDeContexto"] = respuesta
 
       #Devolvemos la salida
-      print(state)
       return output
     
     #Nodo de prompt no valido
@@ -170,7 +169,6 @@ class FlowChatbot:
       output["output"]["respuesta"] = respuesta
 
       #Devolvemos la salida
-      print(state)
       return output
     
     #Nodo de Agente de Memoria a Largo Plazo
@@ -192,7 +190,6 @@ class FlowChatbot:
       output["node_a3_agenteDeMemoriaLargoPlazo"] = respuesta
 
       #Devolvemos la salida
-      print(state)
       return output
     
     #Nodo de información por recordar
@@ -218,7 +215,6 @@ class FlowChatbot:
       self.escribirArchivo(informacionCoherente["textoCoherente"])
 
       #Devolvemos la salida
-      print(state)
       return output
 
     #Nodo de Agente de Chatbot
@@ -239,9 +235,7 @@ class FlowChatbot:
 
       # Construimos la salida
       output["output"]["respuesta"] = respuesta
-
       # Devolvemos la salida
-      print(state)
       return output
 
     def node_a6_agenteDeImagenes(state: dict) -> dict:
@@ -254,7 +248,7 @@ class FlowChatbot:
 
         # Obtenemos los parámetros
         contenido = state["output"]["respuesta"]
-
+        
         # Ejecutamos el agente de imágenes
         respuesta = responderImagen(obtenerModeloImagen(), contenido)
 
@@ -262,11 +256,10 @@ class FlowChatbot:
 
         # Construimos la salida
         output["output"]["respuesta"] += respuesta
-
+        print("Respuesta del agente de imágenes:", respuesta)
         # Devolvemos la salida
-        print(state)
         return output
-
+        
     #Construimos un grafo que recibe JSONs
     self.constructor = StateGraph(dict)
 
