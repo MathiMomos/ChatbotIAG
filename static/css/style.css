@@ -8,34 +8,162 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 1rem; /* Añade un poco de espacio en los bordes */
+    padding: 1rem;
     box-sizing: border-box;
+    overflow: hidden;
 }
+
+.main-container {
+    display: flex; 
+    justify-content: center;
+    align-items: center;
+    gap: 2%; 
+    width: 100%;
+    max-width: 1200px; 
+    height: 95vh;
+    max-height: 800px;
+    transition: max-width 0.5s ease-in-out;
+}
+
+body.image-view-active .main-container {
+    max-width: 1500px;
+    max-height: 850px;
+}
+
+.image-panel {
+    width: 0; 
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    transition: width 0.5s ease-in-out, padding 0.5s ease-in-out, border-width 0.5s ease-in-out;
+    overflow: hidden; 
+    flex-shrink: 0; 
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    border: solid rgba(255, 255, 255, 0.2);
+    border-width: 0;
+    border-radius: 30px;
+    padding: 0 0; 
+    box-sizing: border-box;
+    color: white;
+}
+
+body.image-view-active .image-panel {
+    width: 40%; 
+    padding: 20px; 
+    border-width: 1px;
+}
+
+.image-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.image-panel-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.close-button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 2.5rem;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.close-button:hover {
+    opacity: 1;
+}
+
+.image-display-area {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background-color: transparent;
+    border-radius: 20px;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.generated-image-container {
+    width: 100%;
+    flex-shrink: 0;
+}
+
+.generated-image-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 15px;
+    background-color: rgba(0,0,0,0.3);
+}
+
+.image-display-area p {
+    margin: auto;
+}
+
+.image-display-area::-webkit-scrollbar { 
+    width: 10px; 
+}
+.image-display-area::-webkit-scrollbar-track { 
+    background: transparent; 
+}
+.image-display-area::-webkit-scrollbar-thumb { 
+    background-color: rgba(255,255,255,0.3); 
+    border-radius: 20px; 
+    border: 2px solid transparent; 
+}
+.image-display-area::-webkit-scrollbar-thumb:hover { 
+    background-color: rgba(255,255,255,0.5); 
+}
+
+
+body.image-view-active .chat-header h1 {
+    font-size: 1.2rem;
+    line-height: 1.25;
+}
+
 
 /* barra de visualizacion */
 .chat-container {
-    width: 100%;
-    max-width: 1200px; /* El ancho máximo que tendrá en pantallas grandes */
-    height: 95vh;      /* Altura relativa a la ventana */
-    max-height: 800px; /* Altura máxima */
+    width: 100%; 
+    height: 100%;
     display: flex;
     flex-direction: column;
-    gap: 15px; /* Espacio entre el header y el chat */
+    gap: 15px; 
+    transition: width 0.5s ease-in-out; 
+    flex-shrink: 0; 
+    min-width: 0;
+}
+
+body.image-view-active .chat-container {
+    width: 58%; 
 }
 
 .chat-header {
     width: 100%;
-    height: 60px;
-    padding: 0 15px;
+    min-height: 60px; 
+    padding: 5px 15px; 
     display: flex;
     align-items: center;
     border-radius: 30px;
     gap: 15px;
 
     /* GLASS EFFECT */
-    background: rgba(255, 255, 255, 0.1); /* Blanco con transparencia */
-    backdrop-filter: blur(15px);          /* Efecto glass real */
-    -webkit-backdrop-filter: blur(15px);  /* Soporte Safari */
+    background: rgba(255, 255, 255, 0.1); 
+    backdrop-filter: blur(15px);      
+    -webkit-backdrop-filter: blur(15px);  
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.2);
 
@@ -43,7 +171,6 @@ body {
     box-sizing: border-box;
 }
 
-/* Agrupación de logo + título */
 .header-left {
     display: flex;
     align-items: center;
@@ -52,17 +179,15 @@ body {
     min-width: 0;
 }
 
-/* Logo redondo */
 .icon-container {
     width: 48px;
     height: 48px;
-    left: 100px;
     background-color: white;
     border-radius: 50%;
     display: flex;
-    opacity: 1;
     justify-content: center;
     align-items: center;
+    flex-shrink: 0; 
 }
 
 .icon-container-number-container {
@@ -75,7 +200,6 @@ body {
     align-items: center;
 }
 
-/* Imagen dentro del logo */
 .star-container img {
     width: 150%;
     height: 150%;
@@ -89,11 +213,9 @@ h1 {
     color: white;
     margin: 0;
     opacity: 1;
-    white-space: nowrap; /* evita que se rompa el título */
-    overflow: hidden; /* Evita que el texto se desborde */
+    overflow: hidden; 
 }
 
-/* Número a la derecha */
 .number-container span {
     font-weight: 700;
     font-size: clamp(1.25rem, 1rem + 1vw, 1.5rem);
@@ -101,26 +223,22 @@ h1 {
 }
 
 /* Chat de ejecucion */
-
 .chat {
-    
     padding: 25px;
     display: flex;
     background: transparent;
     flex-direction: column ;
     gap: 20px;
-
-    /* Glassmorphism */
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-radius: 30px;
     border: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
-
     flex-grow: 1;
     overflow: hidden;
     width: 100%;
     box-sizing: border-box;
+    min-height: 0;
 }
 
 .global-messages {
@@ -168,11 +286,11 @@ h1 {
 }
 
 .input-container {
-    width: 100%;                /* igual que el .chat */
+    width: 100%;              
     align-self: center;
     padding: 20px;
     background-color: white;
-    border-radius: 30px;           /* esquinas completamente redondeadas */
+    border-radius: 30px;          
     box-shadow: 0 4px 30px rgba(156, 156, 156, 0.15);
     display: flex;
     box-sizing: border-box;
@@ -215,13 +333,16 @@ h1 {
     cursor: pointer;
     flex-shrink: 0;
     transition: background-color 0.2s;
+    color: white; 
 }
 
 #enviar-button svg{
     margin-bottom: 8px;
 }
 
-
+#mic-button {
+    margin-right: 8px;
+}
 #foco-button {
     background-color: #d7e1e6;
     border: none;
@@ -279,13 +400,11 @@ h1 {
     background-color: #76808f; 
 }
 
-/* Contenedor que agrupa los botones Enviar/Pausa */
 .send-pause-container {
-    position: relative; /* Clave para que los botones internos se posicionen respecto a él */
-    flex-shrink: 0;  /* Evita que se encoja */
+    position: relative;
+    flex-shrink: 0; 
 }
 
-/* Posiciona ambos botones en el mismo lugar dentro del contenedor */
 .send-pause-container .action-button {
     position: absolute;
     top: 0;
@@ -294,12 +413,9 @@ h1 {
     height: 100%;
 }
 
-/* El botón de pausa debe estar oculto por defecto */
 #pausar-button {
     display: none;
 }
-
-
 
 /* Para tablets 1024px*/
 @media (max-width: 1024px) {
@@ -311,9 +427,30 @@ h1 {
         height: 95vh;
         max-width: 100%;
     }
+    
+    body.image-view-active .main-container {
+        transform: translateX(0); 
+    }
+
+    body.image-view-active .chat-container {
+        width: 100%; 
+    }
+    
+    .image-panel {
+        width: 95%; 
+        height: 95%;
+        top: 2.5%;
+        left: 2.5%;
+        right: auto;
+        transform: translateY(110%); 
+    }
+
+    body.image-view-active .image-panel {
+        transform: translateY(0);
+    }
 
     h1 {
-        font-size: clamp(1rem, 1.1rem + 1vw, 1.25rem);
+        font-size: clamp(1.1rem, 1rem + 1vw, 1.25rem);
     }
     
     .chat {
@@ -330,14 +467,20 @@ h1 {
     }
 }
 
-/* Para Móviles 768px*/
+/* Para Móviles 768px(falta mejora de pantalla dividida para generador de imagenes y chat)*/
 @media (max-width: 768px) {
     body {
         padding: 0;
     }
 
+    .main-container {
+        height: 100vh;
+        max-height: 100%;
+        max-width: 100%;
+    }
+
     .chat-container {
-        height: 94vh;
+        height: 100vh;
         max-height: 100%;
         width: 100%;
         border-radius: 0;
@@ -346,11 +489,15 @@ h1 {
     }
     
     .chat-header {
-        height: 55px;
+        height: auto; 
+        min-height: 55px;
+        padding-top: 5px;
+        padding-bottom: 5px;
     }
 
     h1 {
-        font-size: 0.9rem; 
+        font-size: 0.95rem; 
+        line-height: 1.3; 
     }
     
     .chat {
@@ -386,7 +533,7 @@ h1 {
     }
 }
 
-/* --- ESTILOS PARA LA ANIMACIÓN DE "PENSANDO" --- */
+/* --- ESTILOS PARA LA ANIMACIÓN DE PENSANDO     --- */
 .typing-indicator {
     display: flex;
     align-items: center;
@@ -422,8 +569,6 @@ h1 {
 }
 
 /* ESTILO PARA EL REPRODUCTOR*/
-
-/* Contenedor principal*/
 .user-message .custom-audio-player {
     display: flex;
     align-items: center;
@@ -434,7 +579,6 @@ h1 {
     margin-right: 10px;
 }
 
-/* Botón de Play/Pausa */
 .user-message .audio-play-button {
     background-color: #ffffff;
     border: none;
@@ -459,7 +603,6 @@ h1 {
     fill: #326EAB;
 }
 
-/* Contenedor de la línea de progreso */
 .user-message .progress-container {
     flex-grow: 1;
     height: 100%;
@@ -476,7 +619,6 @@ h1 {
     position: absolute;
 }
 
-/* Línea de progreso*/
 .user-message .progress-bar {
     width: 0%;
     height: 5px;
@@ -485,7 +627,6 @@ h1 {
     position: absolute;
 }
 
-/* Círculo*/
 .user-message .progress-handle {
     position: absolute;
     left: 0%;
@@ -498,7 +639,6 @@ h1 {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-/* Tiempo */
 .user-message .audio-time-display {
     font-size: 1.2rem;
     color: #ffffff;
@@ -507,7 +647,6 @@ h1 {
 }
 
 /* ANIMACIÓN DE MICROFONO*/
-
 @keyframes pulse-animation {
   0% {
     transform: scale(1);
@@ -523,4 +662,3 @@ h1 {
 #mic-button.recording {
   animation: pulse-animation 1.5s ease-in-out infinite;
 }
-

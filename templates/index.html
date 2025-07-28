@@ -18,59 +18,78 @@
 </head>
 
 <body>
-    <!-- barra de visualizacion  -->
-    <div class="chat-container">
-    <header class="chat-header">
-        <div class="header-left">
-            <div class="icon-container star-container">
-                <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Icono de estrella">
-            </div>
-            <h1>Education and technology in times of artificial intelligence</h1>
-        </div>
-            <div class="icon-container-number-container">
-                <button id="foco-button" class="action-button">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 64 64">
-                        <path d="M32 6c-10 0-18 8-18 18 0 6.6 3.6 11.6 7 15 2.3 2.3 3 4 3 7h16c0-3 0.7-4.7 3-7 3.4-3.4 7-8.4 7-15 0-10-8-18-18-18z"/>
-                        <line x1="24" y1="52" x2="40" y2="52" />
-                        <line x1="24" y1="58" x2="40" y2="58" />
-                    </svg>
-
-                </button>
-            </div>
-    </header>
-
-    <section class="chat">
-        <div id="global-messages" class="global-messages">
-                <div class="centered-message">Hello! I'm your Assistant. How can I help you today?</div>
-        </div>
-
-        <div class="input-container">
-                <textarea id="user-input" placeholder="Ask anythink..." rows="1"></textarea>
-                <div class="button-group">
-                    <button id="mic-button" class="action-button">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 14C13.66 14 15 12.66 15 11V5C15 3.34 13.66 2 12 2C10.34 2 9 3.34 9 5V11C9 12.66 10.34 14 12 14ZM10.8 4.9C10.8 4.4 11.2 4 11.7 4H12.3C12.8 4 13.2 4.4 13.2 4.9V11.1C13.2 11.6 12.8 12 12.3 12H11.7C11.2 12 10.8 11.6 10.8 11.1V4.9Z" />
-                            <path d="M17.3 11C17.3 13.71 15.11 15.9 12.4 15.9C9.69 15.9 7.5 13.71 7.5 11H6C6 14.31 8.54 16.99 11.75 17.41V20H13.25V17.41C16.46 16.99 19 14.31 19 11H17.3Z" />
+    <!-- ===== NUEVO CONTENEDOR PRINCIPAL ===== -->
+    <div class="main-container">
+        <!-- barra de visualizacion  -->
+        <div class="chat-container">
+            <header class="chat-header">
+                <div class="header-left">
+                    <div class="icon-container star-container">
+                        <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="Icono de estrella">
+                    </div>
+                    <h1>Education and technology in times of artificial intelligence</h1>
+                </div>
+                <div class="icon-container-number-container">
+                    <div class="foco-container">
+                    <button id="foco-button" class="action-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 64 64">
+                            <path d="M32 6c-10 0-18 8-18 18 0 6.6 3.6 11.6 7 15 2.3 2.3 3 4 3 7h16c0-3 0.7-4.7 3-7 3.4-3.4 7-8.4 7-15 0-10-8-18-18-18z"/>
+                            <line x1="24" y1="52" x2="40" y2="52" />
+                            <line x1="24" y1="58" x2="40" y2="58" />
                         </svg>
                     </button>
-                    <div class="send-pause-container"></div>
-                        <button id="pausar-button" class="action-button" title="Pausar respuesta">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="white">
-                            <rect x="6" y="6" width="12" height="12"/>
+                    </div>
+                </div>
+            </header>
+
+            <section class="chat">
+                <div id="global-messages" class="global-messages">
+                    <div class="centered-message">Hello! I'm your Assistant. How can I help you today?</div>
+                </div>
+
+                <div class="input-container">
+                    <textarea id="user-input" placeholder="Ask anythink..." rows="1"></textarea>
+                    <div class="button-group">
+                        <button id="mic-button" class="action-button" title="Grabar audio">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 14C13.66 14 15 12.66 15 11V5C15 3.34 13.66 2 12 2C10.34 2 9 3.34 9 5V11C9 12.66 10.34 14 12 14ZM10.8 4.9C10.8 4.4 11.2 4 11.7 4H12.3C12.8 4 13.2 4.4 13.2 4.9V11.1C13.2 11.6 12.8 12 12.3 12H11.7C11.2 12 10.8 11.6 10.8 11.1V4.9Z" />
+                                <path d="M17.3 11C17.3 13.71 15.11 15.9 12.4 15.9C9.69 15.9 7.5 13.71 7.5 11H6C6 14.31 8.54 16.99 11.75 17.41V20H13.25V17.41C16.46 16.99 19 14.31 19 11H17.3Z" />
                             </svg>
                         </button>
-                        <button id="enviar-button" class="action-button" title="Enviar mensaje">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="30" viewBox="0 0 24 24" fill="white">
+
+                        <button id="image-button" class="action-button" title="Generar imagen">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M5 21q-.825 0-1.412-.587T3 19V5q0-.825.588-1.412T5 3h14q.825 0 1.413.588T21 5v14q0 .825-.587 1.413T19 21zm0-2h14V5H5zm1-2h12l-3.75-5l-3 4L9 13zm-1 2V5z"/></svg>
+                        </button>
+
+                        <div class="send-pause-container"></div>
+                            <button id="pausar-button" class="action-button" title="Pausar respuesta">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="white">
+                                <rect x="6" y="6" width="12" height="12"/>
+                                </svg>
+                            </button>
+                            <button id="enviar-button" class="action-button" title="Enviar mensaje">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="30" viewBox="0 0 24 24" fill="white">
                                 <path d="M5 15l7-7 7 7" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
                                 <line x1="12" y1="22" x2="12" y2="8" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
                             </svg>
                         </button>
-                    <div>
+                        <div>
+                    </div>
                 </div>
+            </section>
         </div>
 
-    </section>
+        <!-- ===== PANEL DE IMAGEN ===== -->
+        <div class="image-panel" id="image-panel">
+            <div class="image-panel-header">
+                <h2>Imagen generada</h2>
+                <button id="close-image-panel" class="close-button">&times;</button>
+            </div>
+            <div class="image-display-area">
+            </div>
+        </div>
     </div>
+
     <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 </body>
 

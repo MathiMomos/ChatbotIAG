@@ -3,8 +3,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const globalMessages = document.getElementById('global-messages');
     const focoButton = document.getElementById('foco-button');
     const micButton = document.getElementById('mic-button');
+    const imageButton = document.getElementById('image-button');
     const enviarButton = document.getElementById('enviar-button');
     const pausarButton = document.getElementById('pausar-button');
+    const closeImagePanelButton = document.getElementById('close-image-panel');
+    const imageDisplayArea = document.querySelector('.image-display-area');
 
     let mediaRecorder;
     let audioChunks = [];
@@ -13,10 +16,66 @@ document.addEventListener('DOMContentLoaded', function () {
     let typeWriterTimeout;
     let stopTypingRequested = false;
 
-    let audioPlayerId = 0; //id unico para cada audio
-
-    // 1. Variable para guardar el estado del foco
+    let audioPlayerId = 0;
     let usarBaseConocimiento = true;
+    let isGeneratingImage = false;
+
+    // --- LOGICA DEL PANEL DE IMAGEN ---
+    imageButton.addEventListener('click', async () => {
+        if (isGeneratingImage) {
+            console.log("Ya se está generando una imagen.");
+            return;
+        }
+
+        isGeneratingImage = true;
+        document.body.classList.add('image-view-active');
+        
+        const loadingIndicator = document.createElement('div');
+        loadingIndicator.className = 'generated-image-container';
+        loadingIndicator.innerHTML = `<div class="typing-indicator" style="padding: 20px; margin: auto;"><span></span><span></span><span></span></div>`;
+        
+        const placeholderText = imageDisplayArea.querySelector('p');
+        if (placeholderText) {
+            placeholderText.remove();
+        }
+        
+        imageDisplayArea.appendChild(loadingIndicator);
+        imageDisplayArea.scrollTop = imageDisplayArea.scrollHeight;
+
+        try {
+            const response = await fetch('/generate-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error del servidor: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            const imageContainer = document.createElement('div');
+            imageContainer.className = 'generated-image-container';
+            const img = document.createElement('img');
+            img.src = data.image_url;
+            img.alt = `Imagen generada`;
+            imageContainer.appendChild(img);
+            
+            loadingIndicator.replaceWith(imageContainer);
+            imageDisplayArea.scrollTop = imageDisplayArea.scrollHeight;
+
+        } catch (error) {
+            console.error("Error al generar la imagen:", error);
+            loadingIndicator.remove();
+            addMessage("Lo siento, no se pudo generar la imagen.", "bot");
+        } finally {
+            isGeneratingImage = false;
+        }
+    });
+
+    closeImagePanelButton.addEventListener('click', () => {
+        document.body.classList.remove('image-view-active');
+    });
 
     focoButton.addEventListener('click', function () {
         this.classList.toggle('active');
@@ -24,7 +83,21 @@ document.addEventListener('DOMContentLoaded', function () {
         usarBaseConocimiento = !usarBaseConocimiento;
         console.log("Usar base de conocimiento:", usarBaseConocimiento);
     });
+    
+    // --- LÓGICA PARA EL PANEL DE IMAGEN ---
+    imageButton.addEventListener('click', () => {
+        console.log('Abriendo panel de imagen...');
+        document.body.classList.add('image-view-active');
+        // Aquí iría la lógica para generar la imagen y mostrarla
+    });
 
+    closeImagePanelButton.addEventListener('click', () => {
+        console.log('Cerrando panel de imagen...');
+        document.body.classList.remove('image-view-active');
+    });
+
+    
+    // ------------------------------------
 
     // Click y envia mensaje
     enviarButton.addEventListener('click', sendMessage);
