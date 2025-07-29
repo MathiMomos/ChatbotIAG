@@ -23,6 +23,7 @@ def chat():
     promptUsuario = datos.get('prompt')
     usarBase = datos.get('usar_base')
     tipo = promptUsuario.get('tipo')
+    imagen  = datos.get("imagen", False)
     if tipo == 'audio':
         promptUsuario = {
             "tipo": "texto",
@@ -38,8 +39,10 @@ def chat():
 
 
     # 3. Ejecuta el flujo y devuelve la respuesta
-    respuestaModelo = chatbot.ejecutar(prompt=promptUsuario, base=usarBase)
-    return jsonify({"respuesta": respuestaModelo})
+    respuestaModelo = chatbot.ejecutar(prompt=promptUsuario, base=usarBase, imagen=imagen)
+    print("DEBUG ▶︎ Salida del grafo:", respuestaModelo)          
+    print("DEBUG ▶︎ Tipo:", type(respuestaModelo))
+    return jsonify(respuestaModelo)
 
 
 
