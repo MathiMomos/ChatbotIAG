@@ -3,7 +3,7 @@ body {
     margin: 0;
     font-size: clamp(1rem, 0.9rem + 0.5vw, 1.125rem);
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(180deg, #326EAB 0%, #5C3273 80%) fixed;
+    background: radial-gradient(circle, #6E57EF 0%, #A67EF4 100%) fixed;
     min-height: 100vh;
     display: flex;
     justify-content: center;
@@ -19,9 +19,9 @@ body {
     align-items: center;
     gap: 2%; 
     width: 100%;
-    max-width: 1200px; 
-    height: 95vh;
-    max-height: 800px;
+    max-width: 1100px; 
+    height: 90vh;
+    max-height: 700px;
     transition: max-width 0.5s ease-in-out;
 }
 
@@ -137,84 +137,81 @@ body.image-view-active .chat-header h1 {
 
 /* barra de visualizacion */
 .chat-container {
-    width: 100%; 
+    width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
-    gap: 15px; 
-    transition: width 0.5s ease-in-out; 
-    flex-shrink: 0; 
+    gap: 15px;
+    transition: width 0.5s ease-in-out;
+    flex-shrink: 0;
     min-width: 0;
 }
 
 body.image-view-active .chat-container {
-    width: 58%; 
-}
-
-.chat-header {
-    width: 100%;
-    min-height: 60px; 
-    padding: 5px 15px; 
-    display: flex;
-    align-items: center;
-    border-radius: 30px;
-    gap: 15px;
-
-    /* GLASS EFFECT */
-    background: rgba(255, 255, 255, 0.1); 
-    backdrop-filter: blur(15px);      
-    -webkit-backdrop-filter: blur(15px);  
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-
-    z-index: 1000;
-    box-sizing: border-box;
-}
-
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    flex-grow: 1;
-    min-width: 0;
+    width: 50%;
 }
 
 .icon-container {
-    width: 48px;
-    height: 48px;
-    background-color: white;
+    position: absolute; /* o fixed si quieres que se quede visible al hacer scroll */
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+
+    width: 60px;
+    height: 60px;
+    background-color: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
-    flex-shrink: 0; 
+    z-index: 10; /* asegúrate que esté encima de otros elementos */
 }
 
-.icon-container-number-container {
-    width: 48px;
-    height: 48px;
-    background-color: white;
-    border-radius: 50%;
+.icon-container img {
+    width: 40%;
+    height: auto;
+    object-fit: contain;
+}
+
+.header{
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
+}
+
+.header h1{
+    position: static;
+    transform: none;
+    margin-right: 30px;
+    font-size: clamp(1.375rem, 1.2rem + 1.5vw, 1.55rem);
 }
 
 .star-container img {
-    width: 150%;
-    height: 150%;
+    width: 70%;
+    height: auto;
     object-fit: contain;
 }
 
 /* Título */
 h1 {
+    position: absolute; /* o fixed */
+    top: 25px;
+    left: 50%;
+    padding: 40px;
+    transform: translateX(-50%);
+    max-width: 90vw;
+    text-align: center;
     font-weight: 700;
     font-size: clamp(1.375rem, 1.2rem + 1.5vw, 1.75rem);
-    color: white;
+    color: rgba(255, 255, 255, 1);
     margin: 0;
-    opacity: 1;
-    overflow: hidden; 
+    line-height: 1.4;
+    overflow-wrap: break-word;
+    z-index: 999;
 }
+
 
 .number-container span {
     font-weight: 700;
@@ -224,21 +221,23 @@ h1 {
 
 /* Chat de ejecucion */
 .chat {
+    position: relative;
     padding: 25px;
     display: flex;
-    background: transparent;
     flex-direction: column ;
     gap: 20px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: 30px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
     flex-grow: 1;
-    overflow: hidden;
     width: 100%;
     box-sizing: border-box;
     min-height: 0;
+
+    border-radius: 25px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-radius: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
 }
 
 .global-messages {
@@ -255,7 +254,7 @@ h1 {
 .centered-message {
     text-align: center;
     margin: auto;
-    font-size: clamp(1.375rem, 1.2rem + 1.5vw, 1.75rem);
+    font-size: clamp(1.375rem, 1.2rem + 1.5vw, 1.5rem);
     color: white;
     font-weight: 700;
     max-width: 60%;
@@ -263,8 +262,7 @@ h1 {
 
 .message { 
     padding: 15px 20px; 
-    background-color: white;
-    box-shadow: 0 2px 4px 3px rgba(136,166,181,0.25); 
+    background-color: transparent;
     display: inline-block; 
     word-wrap: break-word; 
     overflow-wrap: break-word; 
@@ -272,42 +270,76 @@ h1 {
 }
 
 .bot-message { 
-    border-radius: 4px 18px 18px 18px; 
-    max-width: 100%;
-    align-self: flex-start; 
+    background: transparent;
+    color: white;
+    align-self: flex-start;
 }
 
-.user-message { 
-    border-radius: 18px 4px 18px 18px; 
-    background: #326EAB;
-    color: white; 
+.user-message {
+    background: transparent;
+    color: white;
+    border-radius: 18px 4px 18px 18px;
+    align-self: flex-end;
+    box-shadow: 0 4px 10px rgba(47, 27, 72, 0.25);
     max-width: 70%; 
-    align-self: flex-end; 
 }
 
+/* Botones del bot*/
+.bot-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px; /* Espacio entre los botones */
+    margin-top: 5px; /* Espacio con el mensaje del bot */
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.bot-actions button {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 10px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.bot-actions button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Contenedor de mensaje a enviar */
 .input-container {
+    display: flex;
+    align-items: center;
     width: 100%;              
     align-self: center;
-    padding: 20px;
-    background-color: white;
-    border-radius: 30px;          
-    box-shadow: 0 4px 30px rgba(156, 156, 156, 0.15);
-    display: flex;
+    padding: 12px;
     box-sizing: border-box;
-    gap: 15px;
+    gap: 10px;
+
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 25px; /* Para que sea tipo "píldora" */
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .input-container textarea {
     width: 70%;
     flex-grow: 1;
     border: none;
-    background-color: #d7e1e6;
+    background-color: transparent;
+    color: white;
     padding: 15px 20px;
     border-radius: 30px;
     font-size: clamp(0.9rem, 0.8rem + 0.5vw, 1rem);
     outline: none;
     resize: none;
-    overflow-y: auto;
+    overflow-y: hidden;
     max-height: 8.5rem;
     line-height: 1.5;
     font-family: inherit;
@@ -315,18 +347,23 @@ h1 {
     box-sizing: border-box;
 }
 
+.input-container textarea::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 500;
+}
+
 .button-group {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 2px;
 }
 
 .action-button {
-    background-color: #5C3273;
+    background-color: transparent;
     border: none;
     border-radius: 50%;
-    width: 50px;
-    height: 50px;
+    width: 42px;
+    height: 42px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -336,17 +373,11 @@ h1 {
     color: white; 
 }
 
-#enviar-button svg{
-    margin-bottom: 8px;
-}
 
-#mic-button {
-    margin-right: 8px;
-}
 #foco-button {
-    background-color: #d7e1e6;
+    background-color: #c0c0c0;
     border: none;
-    border-radius: 50%;
+    border-radius: 30px;
     width: 50px;
     height: 50px;
     display: flex;
@@ -375,29 +406,36 @@ h1 {
 
 #foco-button.active svg {
     fill: #5C3273;
-    stroke: #ffffff;
 }
 
+#page-title {
+    flex: auto;
+}
 .action-button:hover { 
-    background-color: #4a285c;
+    background-color: rgb(74, 40, 92, 0.8);
+}
+
+.action-button svg{
+    width: 24px;
+    height: 24px;
+    fill: white;
 }
 
 .global-messages::-webkit-scrollbar { 
-    width: 10px; 
+    width: 8px; 
 }
 
 .global-messages::-webkit-scrollbar-track { 
-    background: #D9D9D9; 
+    background: transparent; 
 }
 
 .global-messages::-webkit-scrollbar-thumb { 
-    background-color: #acb6c2; 
-    border-radius: 20px; 
-    border: 2px solid #D9D9D9; 
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
 }
 
 .global-messages::-webkit-scrollbar-thumb:hover { 
-    background-color: #76808f; 
+    background-color: #7d5ea9; 
 }
 
 .send-pause-container {
@@ -662,3 +700,44 @@ h1 {
 #mic-button.recording {
   animation: pulse-animation 1.5s ease-in-out infinite;
 }
+
+.page-transition {
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .page-fade-out {
+            opacity: 0;
+        }
+
+        /* Indicador visual del modo actual */
+        .mode-indicator {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: transparent;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            z-index: 1000;
+        }
+
+        /* Estilo para el botón cuando está activo */
+        .foco-button-active {
+            background-color: #ffffff !important;
+        }
+
+        /* Diferentes colores para cada modo */
+        .mode-normal {
+            --primary-color: #FFFFFF;
+        }
+
+        .mode-gpt {
+            --primary-color: #000000;
+        }
+
+        /* Aplicar el color primario a elementos relevantes */
+        .chat-header {
+            border-bottom: 3px solid var(--primary-color, #007bff);
+        }
