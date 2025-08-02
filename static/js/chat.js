@@ -20,40 +20,48 @@ document.addEventListener('DOMContentLoaded', function () {
     let isGeneratingImage = false;
 
     // --- LOGICA DEL PANEL DE IMAGEN ---
-    async function generateImage() {
+    async function generateImage(messageElement) {
         if (isGeneratingImage) {
-            console.log("Ya se está generando una imagen.");
-            return;
+            throw new Error("Ya se está generando una imagen.");
         }
 
         isGeneratingImage = true;
         document.body.classList.add('image-view-active');
-        
+
+        const messageText = messageElement.querySelector('div').innerText || messageElement.textContent;
+        console.log("Generando imagen para el mensaje:", messageText);
+
         const loadingIndicator = document.createElement('div');
         loadingIndicator.className = 'generated-image-container';
         loadingIndicator.innerHTML = `<div class="typing-indicator" style="padding: 20px; margin: auto;"><span></span><span></span><span></span></div>`;
-        
+
         const placeholderText = imageDisplayArea.querySelector('p');
         if (placeholderText) {
             placeholderText.remove();
         }
-        
+
         imageDisplayArea.appendChild(loadingIndicator);
         imageDisplayArea.scrollTop = imageDisplayArea.scrollHeight;
         try {
-            const response = await fetch('/generate-image', {
+            const response = await fetch('/imagen', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    prompt: messageText
+                })
             });
             if (!response.ok) {
-                throw new Error(`Error del servidor: ${response.status}`);
+                throw new t(`Error del servidor: ${response.status}`);
             }
 
             const data = await response.json();
+            if (data.error) {
+                throw new Error(data.error);
+            }
             const imageContainer = document.createElement('div');
             imageContainer.className = 'generated-image-container';
             const img = document.createElement('img');
-            img.src = data.image_url;
+            img.src = data.url;
             img.alt = `Imagen generada`;
             imageContainer.appendChild(img);
 
@@ -69,14 +77,35 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    globalMessages.addEventListener('click', function(event) {
-        // Busca el botón más cercano que coincida con el selector
-        const imagebutton = event.target.closest('.generate-image-button');
-        const diagrambutton = event.target.closest('.generate-diagram-button');
-        const chartbutton = event.target.closest('.generate-chart-button');
-        if (imagebutton || diagrambutton || chartbutton) {
-            generateImage();
+    globalMessages.addEventListener('click', function (event) {
+        // IMAGEN
+        const imageButton = event.target.closest('.generate-image-button');
+        if (imageButton) {
+            const messageElement = event.target.closest('.bot-message')
+            // Busca el mensaje del bot más cercano
+            if (messageElement) {
+                generateImage(messageElement);
+            }
         }
+        // DIAGRAMA
+        const diagramButton = event.target.closest('.generate-diagram-button');
+        if (diagramButton) {
+            const messageElement = event.target.closest('.bot-message');
+            if (messageElement) {
+                // Añadir lógica para generar diagrama --> GenerateDiagram(messageElement);
+                console.log("Generando diagrama para el mensaje:", messageElement);
+            }
+        }
+        // ESTADISTICA
+        const chartButton = event.target.closest('.generate-chart-button');
+        if (chartButton) {
+            const messageElement = event.target.closest('.bot-message');
+            if (messageElement) {
+                // Añadir lógica para generar estadística --> GenerateChart(messageElement);
+                console.log("Generando estadística para el mensaje:", messageElement);
+            }
+        }
+
     });
 
     closeImagePanelButton.addEventListener('click', () => {
@@ -92,11 +121,11 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     focoButton.addEventListener('click', function () {
-        this.classList.toggle('active'); 
+        this.classList.toggle('active');
         usarBaseConocimiento = !usarBaseConocimiento;
         console.log("Usar base de conocimiento:", usarBaseConocimiento);
     });
-    
+
     closeImagePanelButton.addEventListener('click', () => {
         console.log('Cerrando panel de imagen...');
         document.body.classList.remove('image-view-active');
@@ -207,7 +236,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         let isDragging = false;
-        
+
         const onMouseMove = (e) => {
             if (!isDragging) return;
             const rect = progressContainer.getBoundingClientRect();
@@ -221,7 +250,7 @@ document.addEventListener('DOMContentLoaded', function () {
             handle.style.left = `${progress}%`;
             timeDisplay.textContent = formatTime(newTime);
         };
-        
+
         const onMouseUp = (e) => {
             if (!isDragging) return;
             isDragging = false;
@@ -232,7 +261,7 @@ document.addEventListener('DOMContentLoaded', function () {
             document.removeEventListener('mousemove', onMouseMove);
             document.removeEventListener('mouseup', onMouseUp);
         };
-        
+
         progressContainer.addEventListener('mousedown', (e) => {
             if (!isFinite(audio.duration)) return;
             isDragging = true;
@@ -244,7 +273,7 @@ document.addEventListener('DOMContentLoaded', function () {
         showThinkingIndicator();
         const arrayBuffer = await audioBlob.arrayBuffer();
         const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-        
+
         fetch('/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -257,16 +286,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             })
         })
-        .then(resp => resp.json())
-        .then(data => {
-            hideThinkingIndicator();
-            renderBotResponse(data.respuesta);
-        })
-        .catch(err => {
-            console.error(err);
-            hideThinkingIndicator();
-            renderBotResponse('Lo siento, algo salió mal al procesar tu audio.');
-        });
+            .then(resp => resp.json())
+            .then(data => {
+                hideThinkingIndicator();
+                renderBotResponse(data.respuesta);
+            })
+            .catch(err => {
+                console.error(err);
+                hideThinkingIndicator();
+                renderBotResponse('Lo siento, algo salió mal al procesar tu audio.');
+            });
     }
 
     function stopRecording() {
@@ -314,10 +343,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function renderBotResponse(markdownText) {
         stopTypingRequested = false;
-        
+
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', 'bot-message');
-        
+
         const contentDiv = document.createElement('div');
         contentDiv.innerHTML = marked.parse(markdownText);
         messageDiv.appendChild(contentDiv);
@@ -362,16 +391,16 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 })
             })
-            .then(response => response.json())
-            .then(data => {
-                hideThinkingIndicator();
-                renderBotResponse(data.respuesta);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                hideThinkingIndicator();
-                renderBotResponse('Lo siento, algo salió mal.');
-            });
+                .then(response => response.json())
+                .then(data => {
+                    hideThinkingIndicator();
+                    renderBotResponse(data.respuesta);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    hideThinkingIndicator();
+                    renderBotResponse('Lo siento, algo salió mal.');
+                });
         }
     }
 
