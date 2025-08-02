@@ -15,63 +15,49 @@ document.addEventListener('DOMContentLoaded', function () {
     let audioStream;
     let typeWriterTimeout;
     let stopTypingRequested = false;
-
+    let imagen = false;
     let audioPlayerId = 0;
     let usarBaseConocimiento = true;
     let isGeneratingImage = false;
-
+    let lastBotResponse = "";
+    imageButton.addEventListener('click', () => {
+        imagen = !imagen;                           // cambia estado
+        imageButton.classList.toggle('active', imagen); // (estilo opcional)
+    });
     // --- LOGICA DEL PANEL DE IMAGEN ---
-    imageButton.addEventListener('click', async () => {
-        if (isGeneratingImage) {
-            console.log("Ya se está generando una imagen.");
-            return;
-        }
-
-        isGeneratingImage = true;
+    function showImage(url) {
         document.body.classList.add('image-view-active');
-        
-        const loadingIndicator = document.createElement('div');
-        loadingIndicator.className = 'generated-image-container';
-        loadingIndicator.innerHTML = `<div class="typing-indicator" style="padding: 20px; margin: auto;"><span></span><span></span><span></span></div>`;
-        
-        const placeholderText = imageDisplayArea.querySelector('p');
-        if (placeholderText) {
-            placeholderText.remove();
-        }
-        
-        imageDisplayArea.appendChild(loadingIndicator);
+
+        // Loader
+        const loading = document.createElement('div');
+        loading.className = 'generated-image-container';
+        loading.innerHTML =
+            `<div class="typing-indicator" style="padding:20px;margin:auto;">
+         <span></span><span></span><span></span>
+       </div>`;
+
+        imageDisplayArea.innerHTML = '';         // limpia
+        imageDisplayArea.appendChild(loading);
         imageDisplayArea.scrollTop = imageDisplayArea.scrollHeight;
 
-        try {
-            const response = await fetch('/generate-image', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-            });
+        // Carga real de la imagen
+        const img = new Image();
+        img.src = url;
+        img.alt = 'Imagen generada';
 
-            if (!response.ok) {
-                throw new Error(`Error del servidor: ${response.status}`);
-            }
-
-            const data = await response.json();
-            
-            const imageContainer = document.createElement('div');
-            imageContainer.className = 'generated-image-container';
-            const img = document.createElement('img');
-            img.src = data.image_url;
-            img.alt = `Imagen generada`;
-            imageContainer.appendChild(img);
-            
-            loadingIndicator.replaceWith(imageContainer);
+        img.onload = () => {
+            const cont = document.createElement('div');
+            cont.className = 'generated-image-container';
+            cont.appendChild(img);
+            loading.replaceWith(cont);
             imageDisplayArea.scrollTop = imageDisplayArea.scrollHeight;
+        };
 
-        } catch (error) {
-            console.error("Error al generar la imagen:", error);
-            loadingIndicator.remove();
-            addMessage("Lo siento, no se pudo generar la imagen.", "bot");
-        } finally {
-            isGeneratingImage = false;
-        }
-    });
+        img.onerror = () => {
+            loading.remove();
+            addMessage("No se pudo cargar la imagen 😔", "bot");
+        };
+    }
 
     closeImagePanelButton.addEventListener('click', () => {
         document.body.classList.remove('image-view-active');
@@ -83,20 +69,14 @@ document.addEventListener('DOMContentLoaded', function () {
         usarBaseConocimiento = !usarBaseConocimiento;
         console.log("Usar base de conocimiento:", usarBaseConocimiento);
     });
-    
-    // --- LÓGICA PARA EL PANEL DE IMAGEN ---
-    imageButton.addEventListener('click', () => {
-        console.log('Abriendo panel de imagen...');
-        document.body.classList.add('image-view-active');
-        // Aquí iría la lógica para generar la imagen y mostrarla
-    });
+
 
     closeImagePanelButton.addEventListener('click', () => {
         console.log('Cerrando panel de imagen...');
         document.body.classList.remove('image-view-active');
     });
 
-    
+
     // ------------------------------------
 
     // Click y envia mensaje
@@ -133,15 +113,15 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Formatear el tiempo de segundos a MM:SS
-        function formatTime(seconds) {
-            if (!isFinite(seconds) || seconds < 0) {
-                return "0:00";
-            }
-
-            const minutes = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${minutes}:${secs.toString().padStart(2, '0')}`;
+    function formatTime(seconds) {
+        if (!isFinite(seconds) || seconds < 0) {
+            return "0:00";
         }
+
+        const minutes = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${minutes}:${secs.toString().padStart(2, '0')}`;
+    }
 
     async function handleAudioStop() {
         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
@@ -150,7 +130,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Incrementamos el ID para cada nuevo audio
         audioPlayerId++;
         const currentId = audioPlayerId;
-        
+
         //Estructura del reproductor
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', 'user-message');
@@ -198,87 +178,87 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Evento para actualizar la barra de progreso y el tiempo
         audio.addEventListener('timeupdate', () => {
-        if (isFinite(audio.duration)) {
-            const progress = (audio.currentTime / audio.duration) * 100;
-            progressBar.style.width = `${progress}%`;
-            handle.style.left = `${progress}%`;
-            timeDisplay.textContent = formatTime(audio.currentTime);
-        }
-    });
+            if (isFinite(audio.duration)) {
+                const progress = (audio.currentTime / audio.duration) * 100;
+                progressBar.style.width = `${progress}%`;
+                handle.style.left = `${progress}%`;
+                timeDisplay.textContent = formatTime(audio.currentTime);
+            }
+        });
 
-    audio.addEventListener('loadedmetadata', () => {
-        if (isFinite(audio.duration)) {
-            timeDisplay.textContent = formatTime(audio.duration);
-        }
-    });
+        audio.addEventListener('loadedmetadata', () => {
+            if (isFinite(audio.duration)) {
+                timeDisplay.textContent = formatTime(audio.duration);
+            }
+        });
 
         // Cuando el audio termina, resetea el icono de tiempo
         audio.addEventListener('ended', () => {
-        playBtn.innerHTML = playIcon;
-        handle.style.left = '0%';
-        progressBar.style.width = '0%';
-        audio.currentTime = 0;
-        timeDisplay.textContent = formatTime(audio.duration);
-    });
+            playBtn.innerHTML = playIcon;
+            handle.style.left = '0%';
+            progressBar.style.width = '0%';
+            audio.currentTime = 0;
+            timeDisplay.textContent = formatTime(audio.duration);
+        });
 
 
 
 
-    //FUNCIONALIDAD DE ARRASTRE DE MOUSE POR LA BARRA DEL AUDIO
-    
-    let isDragging = false;
+        //FUNCIONALIDAD DE ARRASTRE DE MOUSE POR LA BARRA DEL AUDIO
 
-    const onMouseMove = (e) => {
-        if (!isDragging) return;
+        let isDragging = false;
 
-        const rect = progressContainer.getBoundingClientRect();
-        let offsetX = e.clientX - rect.left;
-        const width = rect.width;
+        const onMouseMove = (e) => {
+            if (!isDragging) return;
 
-        // Limitar el valor para que no se salga de la barra
-        if (offsetX < 0) offsetX = 0;
-        if (offsetX > width) offsetX = width;
+            const rect = progressContainer.getBoundingClientRect();
+            let offsetX = e.clientX - rect.left;
+            const width = rect.width;
 
-        const newTime = (offsetX / width) * audio.duration;
-        
-        // Actualizacion de UI en tiempo real
-        const progress = (newTime / audio.duration) * 100;
-        progressBar.style.width = `${progress}%`;
-        handle.style.left = `${progress}%`;
-        timeDisplay.textContent = formatTime(newTime);
-    };
+            // Limitar el valor para que no se salga de la barra
+            if (offsetX < 0) offsetX = 0;
+            if (offsetX > width) offsetX = width;
 
-    // Función al soltar el clic
-    const onMouseUp = (e) => {
-        if (!isDragging) return;
+            const newTime = (offsetX / width) * audio.duration;
 
-        isDragging = false;
-        
-        const rect = progressContainer.getBoundingClientRect();
-        const offsetX = e.clientX - rect.left;
-        const width = rect.width;
-        
-        // Actualizar el tiempo del audio a la posición final
-        audio.currentTime = (offsetX / width) * audio.duration;
+            // Actualizacion de UI en tiempo real
+            const progress = (newTime / audio.duration) * 100;
+            progressBar.style.width = `${progress}%`;
+            handle.style.left = `${progress}%`;
+            timeDisplay.textContent = formatTime(newTime);
+        };
 
-        // Limpiar los listeners del documento 
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-    };
+        // Función al soltar el clic
+        const onMouseUp = (e) => {
+            if (!isDragging) return;
 
-    // Iniciar el proceso al presionar el clic en la barra
-    progressContainer.addEventListener('mousedown', (e) => {
-        if (!isFinite(audio.duration)) return;
+            isDragging = false;
 
-        isDragging = true;
-        
-        // Actualizar la posición inmediatamente al hacer clic
-        onMouseMove(e);
-        
-        // Captura movimiento fuera de la barra
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-    });
+            const rect = progressContainer.getBoundingClientRect();
+            const offsetX = e.clientX - rect.left;
+            const width = rect.width;
+
+            // Actualizar el tiempo del audio a la posición final
+            audio.currentTime = (offsetX / width) * audio.duration;
+
+            // Limpiar los listeners del documento 
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        };
+
+        // Iniciar el proceso al presionar el clic en la barra
+        progressContainer.addEventListener('mousedown', (e) => {
+            if (!isFinite(audio.duration)) return;
+
+            isDragging = true;
+
+            // Actualizar la posición inmediatamente al hacer clic
+            onMouseMove(e);
+
+            // Captura movimiento fuera de la barra
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
 
 
 
@@ -297,13 +277,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     tipo: 'audio',
                     contenido: base64Audio,
                     mime_type: 'audio/webm'
-                }
+                },
+                imagen: imagen
             })
         })
             .then(resp => resp.json())
             .then(data => {
                 hideThinkingIndicator();
                 renderBotResponse(data.respuesta);
+                if (imagen && data.imagen_url) {
+                    showImage(data.imagen_url);
+                }
             })
             .catch(err => {
                 console.error(err);
@@ -328,13 +312,13 @@ document.addEventListener('DOMContentLoaded', function () {
             stopRecording();
         }
     });
-    
+
     function scrollToBottom() {
         globalMessages.scrollTop = globalMessages.scrollHeight;
     }
 
     function adjustTextareaHeight() {
-        userInput.style.height = 'auto'; 
+        userInput.style.height = 'auto';
         userInput.style.height = (userInput.scrollHeight) + 'px';
         userInput.scrollTop = userInput.scrollHeight;
     }
@@ -353,57 +337,58 @@ document.addEventListener('DOMContentLoaded', function () {
             indicator.remove();
         }
     }
-    
+
     // ESTILO MARKDOWN
     function renderBotResponse(markdownText) {
-    //Reinicia el contenerdor y crea el
-    stopTypingRequested = false; 
-    const messageDiv = document.createElement('div');
-    messageDiv.classList.add('message', 'bot-message');
-    globalMessages.appendChild(messageDiv);
-    
-    //Intercambia botones
-    enviarButton.style.display = 'none';
-    pausarButton.style.display = 'flex';
+        //Reinicia el contenerdor y crea el
+        lastBotResponse = markdownText;
+        stopTypingRequested = false;
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', 'bot-message');
+        globalMessages.appendChild(messageDiv);
 
-    let i = 0;
-    const speed = 2;
+        //Intercambia botones
+        enviarButton.style.display = 'none';
+        pausarButton.style.display = 'flex';
 
-    function typeWriter() {
-        // Se detiene al click
-        if (i >= markdownText.length || stopTypingRequested) {
-            clearTimeout(typeWriterTimeout);
-            messageDiv.innerHTML = marked.parse(markdownText);
-            messageDiv.querySelectorAll('pre code').forEach((block) => {
-                hljs.highlightElement(block);
-            });
+        let i = 0;
+        const speed = 2;
 
-            pausarButton.style.display = 'none';
-            enviarButton.style.display = 'flex';
-        
+        function typeWriter() {
+            // Se detiene al click
+            if (i >= markdownText.length || stopTypingRequested) {
+                clearTimeout(typeWriterTimeout);
+                messageDiv.innerHTML = marked.parse(markdownText);
+                messageDiv.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                });
+
+                pausarButton.style.display = 'none';
+                enviarButton.style.display = 'flex';
+
+                scrollToBottom();
+                return;
+            }
+
+            // Si no se detiene, continúa la animación
+            messageDiv.innerHTML = marked.parse(markdownText.substring(0, i + 1) + '▌');
+            i++;
             scrollToBottom();
-            return;
+
+            // Continúa el bucle de la animación
+            typeWriterTimeout = setTimeout(typeWriter, speed);
         }
 
-        // Si no se detiene, continúa la animación
-        messageDiv.innerHTML = marked.parse(markdownText.substring(0, i + 1) + '▌');
-        i++;
-        scrollToBottom();
-        
-        // Continúa el bucle de la animación
-        typeWriterTimeout = setTimeout(typeWriter, speed);
+        // Inicia la animación
+        typeWriter();
     }
 
-    // Inicia la animación
-    typeWriter();
-}
-
-    function addMessage(text, sender) { 
-        const messageDiv = document.createElement('div'); 
-        messageDiv.classList.add('message', `${sender}-message`); 
-        messageDiv.textContent = text; 
-        globalMessages.appendChild(messageDiv); 
-        scrollToBottom(); 
+    function addMessage(text, sender) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', `${sender}-message`);
+        messageDiv.textContent = text;
+        globalMessages.appendChild(messageDiv);
+        scrollToBottom();
     }
 
     // --- LÓGICA PRINCIPAL (MODIFICADA) ---
@@ -427,13 +412,17 @@ document.addEventListener('DOMContentLoaded', function () {
                         prompt: {
                             tipo: 'texto',
                             contenido: messageText
-                        }
+                        },
+                        imagen: imagen // Asegúrate de enviar false si no se está generando una imagen,
                     })
                 })
                     .then(response => response.json())
                     .then(data => {
                         hideThinkingIndicator();
                         renderBotResponse(data.respuesta);
+                        if (imagen && data.imagen_url) {
+                            showImage(data.imagen_url);
+                        }
                     })
                     .catch(error => {
                         console.error('Error al enviar mensaje:', error);

@@ -45,3 +45,13 @@ def obtenerModeloImagen() -> AzureOpenAI :
   )
 
   return llm
+
+def obtenerModeloModerno() -> AzureOpenAI:
+  #Conexión a un modelo moderno
+  llm: AzureOpenAI = AzureOpenAI(
+      api_version = key.require("CONF_API_VERSION"),
+      azure_endpoint = key.require("CONF_AZURE_ENDPOINT"),
+      api_key = key.require("CONF_OPENAI_API_KEY"),
+  )
+
+  return llm
