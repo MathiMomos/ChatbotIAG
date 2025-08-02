@@ -250,26 +250,48 @@ class FlowChatbot:
       print(state)
       return output
 
-    def node_a6_agenteDeImagenes(state: dict) -> dict:
+    #def node_a6_agenteDeImagenes(state: dict) -> dict:
+    #    # Definimos la salida
+    #    output = state
+    #
+    #    # Imprimimos un mensaje para saber en qué nodo estamos
+    #    print("Ejecutando node_a6_agenteDeImagenes...")
+    #
+    #
+    #    # Obtenemos los parámetros
+    #    contenido = state["output"]["respuesta"]
+    #
+    #    # Ejecutamos el agente de imágenes
+    #    respuesta = responderImagen(obtenerModeloImagen(), contenido)
+    #
+    #    print(respuesta)
+    #
+    #    # Construimos la salida
+    #    output["output"]["respuesta"] += respuesta
+    #    print("Respuesta del agente de imágenes:", respuesta)
+    #    # Devolvemos la salida
+    #    return output
+
+    def node_a7_agentedeDiagramas(state: dict) -> dict:
         # Definimos la salida
         output = state
 
         # Imprimimos un mensaje para saber en qué nodo estamos
-        print("Ejecutando node_a6_agenteDeImagenes...")
-
+        print("Ejecutando node_a7_agentedeDiagramas...")
 
         # Obtenemos los parámetros
         contenido = state["output"]["respuesta"]
-        
-        # Ejecutamos el agente de imágenes
-        respuesta = responderImagen(obtenerModeloImagen(), contenido)
 
-        print(respuesta)
+        # Ejecutamos el agente de diagramas
+        respuesta = self.agenteDeDiagramas.enviarMensaje(contenido)
 
         # Construimos la salida
-        output["output"]["respuesta"] += respuesta
-        print("Respuesta del agente de imágenes:", respuesta)
+        output["output"]["diagrama"] = respuesta
+
         # Devolvemos la salida
+        print(state)
+        print("---")
+        print(respuesta)
         return output
         
     #Construimos un grafo que recibe JSONs
@@ -281,7 +303,8 @@ class FlowChatbot:
     self.constructor.add_node("node_a3_agenteDeMemoriaLargoPlazo", node_a3_agenteDeMemoriaLargoPlazo)
     self.constructor.add_node("node_a4_informacionPorRecordar", node_a4_informacionPorRecordar)
     self.constructor.add_node("node_a5_agenteDeChatbot", node_a5_agenteDeChatbot)
-    self.constructor.add_node("node_a6_agenteDeImagenes", node_a6_agenteDeImagenes)
+    #self.constructor.add_node("node_a6_agenteDeImagenes", node_a6_agenteDeImagenes)
+    self.constructor.add_node("node_a7_agenteDeDiagramas", node_a7_agentedeDiagramas)
 
   #Dibujamos el grafo
   def dibujadoDeGrafo(self):
@@ -302,11 +325,11 @@ class FlowChatbot:
 
     #Conectamos un flujo secuencial
     self.constructor.add_edge("node_a4_informacionPorRecordar", "node_a5_agenteDeChatbot")
-    self.constructor.add_edge("node_a5_agenteDeChatbot", "node_a6_agenteDeImagenes")
+    self.constructor.add_edge("node_a5_agenteDeChatbot", "node_a7_agenteDeDiagramas")
 
     #Indicamos los nodos en donde finaliza el grafo
     self.constructor.set_finish_point("node_a2_promptNoValido")
-    self.constructor.set_finish_point("node_a6_agenteDeImagenes")
+    self.constructor.set_finish_point("node_a7_agenteDeDiagramas")
 
     #Construimos el grafo
     self.grafo = self.constructor.compile()
