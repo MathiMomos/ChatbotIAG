@@ -10,3 +10,4 @@ azure-cognitiveservices-speech
 flask
 langgraph
 pandas
+openpyxl

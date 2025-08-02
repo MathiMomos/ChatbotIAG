@@ -7,6 +7,8 @@ from src.util import util_audio as ua
 from src.util import util_llm
 from src.util import util_images
 from src.util import util_diagrams
+from src.util import util_images as ui
+
 app = Flask(__name__)
 
 chatbot = FlowChatbot(
@@ -14,56 +16,71 @@ chatbot = FlowChatbot(
     basesDeConocimiento=ubc.obtenerBaseDeConocimiento(),
 )
 
-@app.route('/')
-def home():
-    return render_template('index.html')
 
-@app.route('/chat', methods=['POST'])
+@app.route("/")
+def home():
+    return render_template("index.html")
+
+
+@app.route("/chat", methods=["POST"])
 def chat():
     # 1. Recibe los datos como JSON
     datos = request.get_json()
-    
-    promptUsuario = datos.get('prompt')
-    usarBase = datos.get('usar_base')
-    tipo = promptUsuario.get('tipo')
-    imagen  = datos.get("imagen", False)
-    if tipo == 'audio':
+
+    promptUsuario = datos.get("prompt")
+    usarBase = datos.get("usar_base")
+    tipo = promptUsuario.get("tipo")
+    imagen = datos.get("imagen", False)
+    if tipo == "audio":
         promptUsuario = {
             "tipo": "texto",
-            "contenido": ua.transcribir_audio_base64_a_texto(promptUsuario["contenido"])
-            }
+            "contenido": ua.transcribir_audio_base64_a_texto(
+                promptUsuario["contenido"]
+            ),
+        }
     else:
-        promptUsuario = {
-            "tipo": "texto",
-            "contenido": promptUsuario["contenido"]
-            }
+        promptUsuario = {"tipo": "texto", "contenido": promptUsuario["contenido"]}
     print("FLASK ENVIA AL FLUJO:", promptUsuario)
-
-
 
     # 3. Ejecuta el flujo y devuelve la respuesta
     respuestaModelo = chatbot.ejecutar(prompt=promptUsuario, base=usarBase)
-    print("DEBUG ▶︎ Salida del grafo:", respuestaModelo)          
+    print("DEBUG ▶︎ Salida del grafo:", respuestaModelo)
     print("DEBUG ▶︎ Tipo:", type(respuestaModelo))
     return jsonify({"respuesta": respuestaModelo})
 
-@app.route('/image', methods=['POST'])
+
+@app.route("/imagen", methods=["POST"])
 def image():
-    datos = request.get_json()
-    prompt = datos.get('prompt')
-    llm = util_llm.obtenerModeloImagen()
-    url_imagen = util_images.responderImagen(llm, prompt)
+    """Genera una imagen a partir del output del prompt.
 
-    return jsonify({"contenido": "imagen", "valor": url_imagen})
+    Returns:
+        _type_: JSON con la URL de la imagen generada.
+    """
+    try:
+        datos = request.get_json()
+        prompt = datos.get("prompt")
+        if not prompt:
+            return (
+                jsonify({"error": "No se proporcionó texto para generar la imagen"}),
+                400,
+            )
+        promptImagen = ui.ajustarRespuestaImagen(obtenerModeloModerno(), prompt)
+        print("DEBUG ▶︎ Prompt ajustado para imagen:", promptImagen)
+        
+        urlImagen = ui.responderImagen(obtenerModeloImagen(), promptImagen)
+        return jsonify({"url": urlImagen})
+    except Exception as e:
+        return jsonify({"error": "Error al procesar la solicitud de imagen."}), 400
 
-@app.route('/diagram', methods=['POST'])
+
+@app.route("/diagram", methods=["POST"])
 def diagram():
     datos = request.get_json()
-    prompt = datos.get('prompt')
+    prompt = datos.get("prompt")
     json_diagrama = util_diagrams.generar_json_diagrama(prompt)
 
     return jsonify({"contenido": "diagrama", "valor": json_diagrama})
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)

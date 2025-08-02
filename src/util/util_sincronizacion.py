@@ -184,7 +184,8 @@ def sincronizarBaseDeConocimiento(
                             rutaDeArchivo=archivo,
                             nombreDeBaseDeConocimiento=nombreDeBaseDeConocimiento
                         )
-                        archivos_procesados.add(nombre_archivo)  # Marcamos como procesado
+                        archivos_procesados.add(nombre_archivo) # Marcamos como procesado
+                        os.remove(archivo)
                         continue
 
                     # Si no es Excel, sigue el flujo normal

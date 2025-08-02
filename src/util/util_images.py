@@ -25,14 +25,32 @@ def responderImagen(client: AzureOpenAI, prompt: str):
 def ajustarRespuestaImagen(cliente: AzureOpenAI, prompt):
     model = key.require("CONF_AZURE_DEPLOYMENT")
     system_msg = (
-        "Eres un asistente que convierte respuestas largas en prompts seguros "
-        "para motores de generación de imágenes.\n"
-        "Reglas:\n"
-        "• Máximo 40 palabras.\n"
-        "• Prohibido lenguaje violento, sexual, político o datos personales.\n"
-        "• Añade al final: '— ilustración digital, colores suaves'.\n"
-        "• Debes devolver un prompt para generar una imagen ilustrativa del texto."
-        "Devuélveme SOLO el prompt final, sin comillas ni texto extra."
+        "Convierte textos técnicos en prompts visuales SIMPLES y CLAROS.\n\n"
+        
+        "PRINCIPIO CLAVE: MENOS ES MÁS\n"
+        "• Identifica solo el concepto MÁS IMPORTANTE del texto\n"
+        "• Agregar máximo 1-2 elementos de apoyo\n"
+        "• Evita saturar la imagen con muchos elementos\n"
+        "• INCLUYE elementos específicos mencionados (herramientas, sectores, etc.)\n"
+        "• Prioriza CLARIDAD sobre completitud\n\n"
+        
+        "ESTRATEGIA:\n"
+        "1. Concepto principal: ¿Cuál es la idea central?\n"
+        "2. Elemento visual: ¿Cómo representarlo simplemente?\n"
+        "3. Contexto mínimo: ¿Qué ambiente lo apoya?\n\n"
+        
+        "EJEMPLOS DE SIMPLICIDAD EFECTIVA:\n"
+        "• IAG creando contenido → 'IA central emanando texto, imagen y música hacia pantallas'\n"
+        "• Educación con IA → 'Estudiantes interactuando con pantalla IA en aula moderna'\n"
+        "• Análisis de datos → 'gráficos flotantes coloridos y visualizaciones'\n"
+        "• Evolución temporal → línea de tiempo visual\n\n"
+        
+        
+        "REGLAS ESTRICTAS:\n"
+        "• Máximo 40 palabras descriptivas\n"
+        "• 1 concepto principal + máximo 2 elementos de apoyo\n"
+        "• Evita listas largas de elementos\n"
+        "Identifica EL concepto más importante y represéntalo de forma simple y clara."
     )
     messages = [
         {"role": "system", "content": system_msg},
