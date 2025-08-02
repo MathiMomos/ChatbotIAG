@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const globalMessages = document.getElementById('global-messages');
     const focoButton = document.getElementById('foco-button');
     const micButton = document.getElementById('mic-button');
-    const imageButton = document.getElementById('image-button');
     const enviarButton = document.getElementById('enviar-button');
     const pausarButton = document.getElementById('pausar-button');
     const closeImagePanelButton = document.getElementById('close-image-panel');
@@ -15,74 +14,94 @@ document.addEventListener('DOMContentLoaded', function () {
     let audioStream;
     let typeWriterTimeout;
     let stopTypingRequested = false;
-    let imagen = false;
+
     let audioPlayerId = 0;
     let usarBaseConocimiento = true;
     let isGeneratingImage = false;
-    let lastBotResponse = "";
-    imageButton.addEventListener('click', () => {
-        imagen = !imagen;                           // cambia estado
-        imageButton.classList.toggle('active', imagen); // (estilo opcional)
-    });
+
     // --- LOGICA DEL PANEL DE IMAGEN ---
-    function showImage(url) {
+    async function generateImage() {
+        if (isGeneratingImage) {
+            console.log("Ya se está generando una imagen.");
+            return;
+        }
+
+        isGeneratingImage = true;
         document.body.classList.add('image-view-active');
-
-        // Loader
-        const loading = document.createElement('div');
-        loading.className = 'generated-image-container';
-        loading.innerHTML =
-            `<div class="typing-indicator" style="padding:20px;margin:auto;">
-         <span></span><span></span><span></span>
-       </div>`;
-
-        imageDisplayArea.innerHTML = '';         // limpia
-        imageDisplayArea.appendChild(loading);
+        
+        const loadingIndicator = document.createElement('div');
+        loadingIndicator.className = 'generated-image-container';
+        loadingIndicator.innerHTML = `<div class="typing-indicator" style="padding: 20px; margin: auto;"><span></span><span></span><span></span></div>`;
+        
+        const placeholderText = imageDisplayArea.querySelector('p');
+        if (placeholderText) {
+            placeholderText.remove();
+        }
+        
+        imageDisplayArea.appendChild(loadingIndicator);
         imageDisplayArea.scrollTop = imageDisplayArea.scrollHeight;
+        try {
+            const response = await fetch('/generate-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (!response.ok) {
+                throw new Error(`Error del servidor: ${response.status}`);
+            }
 
-        // Carga real de la imagen
-        const img = new Image();
-        img.src = url;
-        img.alt = 'Imagen generada';
+            const data = await response.json();
+            const imageContainer = document.createElement('div');
+            imageContainer.className = 'generated-image-container';
+            const img = document.createElement('img');
+            img.src = data.image_url;
+            img.alt = `Imagen generada`;
+            imageContainer.appendChild(img);
 
-        img.onload = () => {
-            const cont = document.createElement('div');
-            cont.className = 'generated-image-container';
-            cont.appendChild(img);
-            loading.replaceWith(cont);
+            loadingIndicator.replaceWith(imageContainer);
             imageDisplayArea.scrollTop = imageDisplayArea.scrollHeight;
-        };
 
-        img.onerror = () => {
-            loading.remove();
-            addMessage("No se pudo cargar la imagen 😔", "bot");
-        };
+        } catch (error) {
+            console.error("Error al generar la imagen:", error);
+            loadingIndicator.remove();
+            addMessage("Lo siento, no se pudo generar la imagen.", "bot");
+        } finally {
+            isGeneratingImage = false;
+        }
     }
+
+    globalMessages.addEventListener('click', function(event) {
+        // Busca el botón más cercano que coincida con el selector
+        const button = event.target.closest('.generate-image-button');
+        if (button) {
+            generateImage();
+        }
+    });
 
     closeImagePanelButton.addEventListener('click', () => {
         document.body.classList.remove('image-view-active');
     });
 
+    enviarButton.addEventListener('click', sendMessage);
+    userInput.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage();
+        }
+    });
+
     focoButton.addEventListener('click', function () {
-        this.classList.toggle('active');
-        // 2. Actualiza el estado cada vez que se hace clic
+        this.classList.toggle('active'); 
         usarBaseConocimiento = !usarBaseConocimiento;
         console.log("Usar base de conocimiento:", usarBaseConocimiento);
     });
-
-
+    
     closeImagePanelButton.addEventListener('click', () => {
         console.log('Cerrando panel de imagen...');
         document.body.classList.remove('image-view-active');
     });
 
-
-    // ------------------------------------
-
-    // Click y envia mensaje
     enviarButton.addEventListener('click', sendMessage);
 
-    // Evento enviar
     userInput.addEventListener('keypress', function (event) {
         if (event.key === 'Enter' && !event.shiftKey) {
             event.preventDefault();
@@ -90,7 +109,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Evento pausar animacion
     pausarButton.addEventListener('click', () => {
         stopTypingRequested = true;
     });
@@ -99,25 +117,20 @@ document.addEventListener('DOMContentLoaded', function () {
         audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         mediaRecorder = new MediaRecorder(audioStream);
         audioChunks = [];
-
         mediaRecorder.addEventListener('dataavailable', event => {
             audioChunks.push(event.data);
         });
-
         mediaRecorder.addEventListener('stop', handleAudioStop);
-
         mediaRecorder.start();
         console.log('🎙️ Grabando...');
         isRecording = true;
         micButton.classList.add('recording');
     }
 
-    // Formatear el tiempo de segundos a MM:SS
     function formatTime(seconds) {
         if (!isFinite(seconds) || seconds < 0) {
             return "0:00";
         }
-
         const minutes = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         return `${minutes}:${secs.toString().padStart(2, '0')}`;
@@ -126,45 +139,37 @@ document.addEventListener('DOMContentLoaded', function () {
     async function handleAudioStop() {
         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
         const audioUrl = URL.createObjectURL(audioBlob);
-
-        // Incrementamos el ID para cada nuevo audio
         audioPlayerId++;
         const currentId = audioPlayerId;
-
-        //Estructura del reproductor
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', 'user-message');
         messageDiv.innerHTML = `
-        <div class="custom-audio-player">
-            <audio id="audio-${currentId}" src="${audioUrl}" preload="metadata"></audio>
-            <button id="play-btn-${currentId}" class="audio-play-button">
-                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
-            </button>
-            <div id="progress-container-${currentId}" class="progress-container">
-                <div class="progress-background"></div>
-                <div id="progress-bar-${currentId}" class="progress-bar"></div>
-                <div id="progress-handle-${currentId}" class="progress-handle"></div>
+            <div class="custom-audio-player">
+                <audio id="audio-${currentId}" src="${audioUrl}" preload="metadata"></audio>
+                <button id="play-btn-${currentId}" class="audio-play-button">
+                    <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+                </button>
+                <div id="progress-container-${currentId}" class="progress-container">
+                    <div class="progress-background"></div>
+                    <div id="progress-bar-${currentId}" class="progress-bar"></div>
+                    <div id="progress-handle-${currentId}" class="progress-handle"></div>
+                </div>
+                <span id="time-display-${currentId}" class="audio-time-display">0:00</span>
             </div>
-            <span id="time-display-${currentId}" class="audio-time-display">0:00</span>
-        </div>
-    `;
+        `;
         globalMessages.appendChild(messageDiv);
-
-        //Lógica para controlar reproductor
         const audio = document.getElementById(`audio-${currentId}`);
         const playBtn = document.getElementById(`play-btn-${currentId}`);
         const progressContainer = document.getElementById(`progress-container-${currentId}`);
         const progressBar = document.getElementById(`progress-bar-${currentId}`);
         const handle = document.getElementById(`progress-handle-${currentId}`);
         const timeDisplay = document.getElementById(`time-display-${currentId}`);
-
         audio.load();
         scrollToBottom();
 
         const playIcon = `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>`;
         const pauseIcon = `<svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>`;
 
-        // Evento para el botón de play/pausa
         playBtn.addEventListener('click', () => {
             if (audio.paused) {
                 audio.play().then(() => {
@@ -176,7 +181,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        // Evento para actualizar la barra de progreso y el tiempo
         audio.addEventListener('timeupdate', () => {
             if (isFinite(audio.duration)) {
                 const progress = (audio.currentTime / audio.duration) * 100;
@@ -192,7 +196,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        // Cuando el audio termina, resetea el icono de tiempo
         audio.addEventListener('ended', () => {
             playBtn.innerHTML = playIcon;
             handle.style.left = '0%';
@@ -201,73 +204,45 @@ document.addEventListener('DOMContentLoaded', function () {
             timeDisplay.textContent = formatTime(audio.duration);
         });
 
-
-
-
-        //FUNCIONALIDAD DE ARRASTRE DE MOUSE POR LA BARRA DEL AUDIO
-
         let isDragging = false;
-
+        
         const onMouseMove = (e) => {
             if (!isDragging) return;
-
             const rect = progressContainer.getBoundingClientRect();
             let offsetX = e.clientX - rect.left;
             const width = rect.width;
-
-            // Limitar el valor para que no se salga de la barra
             if (offsetX < 0) offsetX = 0;
             if (offsetX > width) offsetX = width;
-
             const newTime = (offsetX / width) * audio.duration;
-
-            // Actualizacion de UI en tiempo real
             const progress = (newTime / audio.duration) * 100;
             progressBar.style.width = `${progress}%`;
             handle.style.left = `${progress}%`;
             timeDisplay.textContent = formatTime(newTime);
         };
-
-        // Función al soltar el clic
+        
         const onMouseUp = (e) => {
             if (!isDragging) return;
-
             isDragging = false;
-
             const rect = progressContainer.getBoundingClientRect();
             const offsetX = e.clientX - rect.left;
             const width = rect.width;
-
-            // Actualizar el tiempo del audio a la posición final
             audio.currentTime = (offsetX / width) * audio.duration;
-
-            // Limpiar los listeners del documento 
             document.removeEventListener('mousemove', onMouseMove);
             document.removeEventListener('mouseup', onMouseUp);
         };
-
-        // Iniciar el proceso al presionar el clic en la barra
+        
         progressContainer.addEventListener('mousedown', (e) => {
             if (!isFinite(audio.duration)) return;
-
             isDragging = true;
-
-            // Actualizar la posición inmediatamente al hacer clic
             onMouseMove(e);
-
-            // Captura movimiento fuera de la barra
             document.addEventListener('mousemove', onMouseMove);
             document.addEventListener('mouseup', onMouseUp);
         });
 
-
-
-        //Enviar al backend
         showThinkingIndicator();
-
         const arrayBuffer = await audioBlob.arrayBuffer();
         const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-
+        
         fetch('/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -277,26 +252,21 @@ document.addEventListener('DOMContentLoaded', function () {
                     tipo: 'audio',
                     contenido: base64Audio,
                     mime_type: 'audio/webm'
-                },
-                imagen: imagen
-            })
-        })
-            .then(resp => resp.json())
-            .then(data => {
-                hideThinkingIndicator();
-                renderBotResponse(data.respuesta);
-                if (imagen && data.imagen_url) {
-                    showImage(data.imagen_url);
                 }
             })
-            .catch(err => {
-                console.error(err);
-                hideThinkingIndicator();
-                renderBotResponse('Lo siento, algo salió mal al procesar tu audio.');
-            });
+        })
+        .then(resp => resp.json())
+        .then(data => {
+            hideThinkingIndicator();
+            renderBotResponse(data.respuesta);
+        })
+        .catch(err => {
+            console.error(err);
+            hideThinkingIndicator();
+            renderBotResponse('Lo siento, algo salió mal al procesar tu audio.');
+        });
     }
 
-    // Función para detener la grabación
     function stopRecording() {
         if (mediaRecorder && isRecording) {
             mediaRecorder.stop();
@@ -305,6 +275,7 @@ document.addEventListener('DOMContentLoaded', function () {
             audioStream.getTracks().forEach(track => track.stop());
         }
     }
+
     micButton.addEventListener('click', () => {
         if (!isRecording) {
             startRecording();
@@ -328,7 +299,8 @@ document.addEventListener('DOMContentLoaded', function () {
         indicatorDiv.classList.add('message', 'bot-message', 'typing-indicator');
         indicatorDiv.id = 'thinking-indicator';
         indicatorDiv.innerHTML = `<span></span><span></span><span></span>`;
-        globalMessages.appendChild(indicatorDiv); scrollToBottom();
+        globalMessages.appendChild(indicatorDiv);
+        scrollToBottom();
     }
 
     function hideThinkingIndicator() {
@@ -338,49 +310,67 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // ESTILO MARKDOWN
     function renderBotResponse(markdownText) {
-        //Reinicia el contenerdor y crea el
-        lastBotResponse = markdownText;
         stopTypingRequested = false;
+        
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', 'bot-message');
+        
+        const contentDiv = document.createElement('div');
+        contentDiv.innerHTML = marked.parse(markdownText);
+        messageDiv.appendChild(contentDiv);
+
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'bot-actions';
+        actionsDiv.innerHTML = `
+            <button class="bot-action-button generate-image-button" title="Generar Imagen">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M5 21q-.825 0-1.412-.587T3 19V5q0-.825.588-1.412T5 3h14q.825 0 1.413.588T21 5v14q0 .825-.587 1.413T19 21zm0-2h14V5H5zm1-2h12l-3.75-5l-3 4L9 13zm-1 2V5z"/></svg>
+            </button>
+            <button class="bot-action-button" title="Botón 2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16"><path fill="currentColor" fill-rule="evenodd" d="M6 3.5A1.5 1.5 0 0 1 7.5 2h1A1.5 1.5 0 0 1 10 3.5v1A1.5 1.5 0 0 1 8.5 6v1H14a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0V8h-5v.5a.5.5 0 0 1-1 0V8h-5v.5a.5.5 0 0 1-1 0v-1A.5.5 0 0 1 2 7h5.5V6A1.5 1.5 0 0 1 6 4.5zM8.5 5a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5zM0 11.5A1.5 1.5 0 0 1 1.5 10h1A1.5 1.5 0 0 1 4 11.5v1A1.5 1.5 0 0 1 2.5 14h-1A1.5 1.5 0 0 1 0 12.5zm1.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm4.5.5A1.5 1.5 0 0 1 7.5 10h1a1.5 1.5 0 0 1 1.5 1.5v1A1.5 1.5 0 0 1 8.5 14h-1A1.5 1.5 0 0 1 6 12.5zm1.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm4.5.5a1.5 1.5 0 0 1 1.5-1.5h1a1.5 1.5 0 0 1 1.5 1.5v1a1.5 1.5 0 0 1-1.5 1.5h-1a1.5 1.5 0 0 1-1.5-1.5zm1.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5z"/></svg>
+            </button>
+            <button class="bot-action-button" title="Botón 3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M22 21H2V3h2v16h2v-9h4v9h2V6h4v13h2v-5h4z"/></svg>
+            </button>
+        `;
+        messageDiv.appendChild(actionsDiv);
+
         globalMessages.appendChild(messageDiv);
+        scrollToBottom();
+    }
 
-        //Intercambia botones
-        enviarButton.style.display = 'none';
-        pausarButton.style.display = 'flex';
+    function sendMessage() {
+        const text = userInput.value.trim();
+        if (text) {
+            addMessage(text, 'user');
+            userInput.value = '';
+            adjustTextareaHeight();
+            showThinkingIndicator();
 
-        let i = 0;
-        const speed = 2;
-
-        function typeWriter() {
-            // Se detiene al click
-            if (i >= markdownText.length || stopTypingRequested) {
-                clearTimeout(typeWriterTimeout);
-                messageDiv.innerHTML = marked.parse(markdownText);
-                messageDiv.querySelectorAll('pre code').forEach((block) => {
-                    hljs.highlightElement(block);
-                });
-
-                pausarButton.style.display = 'none';
-                enviarButton.style.display = 'flex';
-
-                scrollToBottom();
-                return;
-            }
-
-            // Si no se detiene, continúa la animación
-            messageDiv.innerHTML = marked.parse(markdownText.substring(0, i + 1) + '▌');
-            i++;
-            scrollToBottom();
-
-            // Continúa el bucle de la animación
-            typeWriterTimeout = setTimeout(typeWriter, speed);
+            fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    usar_base: usarBaseConocimiento,
+                    prompt: {
+                        tipo: 'texto',
+                        contenido: text
+                    }
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideThinkingIndicator();
+                renderBotResponse(data.respuesta);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                hideThinkingIndicator();
+                renderBotResponse('Lo siento, algo salió mal.');
+            });
         }
-
-        // Inicia la animación
-        typeWriter();
     }
 
     function addMessage(text, sender) {
@@ -391,58 +381,6 @@ document.addEventListener('DOMContentLoaded', function () {
         scrollToBottom();
     }
 
-    // --- LÓGICA PRINCIPAL (MODIFICADA) ---
-
-    function sendMessage() {
-        const messageText = userInput.value.trim();
-        if (messageText) {
-            addMessage(messageText, 'user');
-            userInput.value = '';
-            adjustTextareaHeight();
-
-            showThinkingIndicator();
-
-            setTimeout(() => {
-                // 3. Modifica la llamada fetch para enviar un JSON
-                fetch('/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        usar_base: usarBaseConocimiento,
-                        prompt: {
-                            tipo: 'texto',
-                            contenido: messageText
-                        },
-                        imagen: imagen // Asegúrate de enviar false si no se está generando una imagen,
-                    })
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        hideThinkingIndicator();
-                        renderBotResponse(data.respuesta);
-                        if (imagen && data.imagen_url) {
-                            showImage(data.imagen_url);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error al enviar mensaje:', error);
-                        hideThinkingIndicator();
-                        renderBotResponse('Lo siento, algo salió mal. Inténtalo de nuevo.');
-                    });
-            }, 0); // Reduje el tiempo de espera a 0.5s
-        }
-    }
-
-    userInput.addEventListener('keypress', function (event) {
-        // Permite enviar con Enter y crear nueva linea con Shift + Enter
-        if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault(); // Evita que se cree una nueva línea en el textarea
-            sendMessage();
-        }
-    });
-
     userInput.addEventListener('input', adjustTextareaHeight);
-
-
+    adjustTextareaHeight();
 });
-
