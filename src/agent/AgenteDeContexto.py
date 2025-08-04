@@ -9,37 +9,35 @@
 ## @section Configuración
 ## #######################################################################################################
 
-#Importamos la configuración
+# Importamos la configuración
 import src.util.util_env as key
 
 ## ################q######################################################################################
 ## @section Librerías
 ## #######################################################################################################
 
-#Utilitario para crear una plantilla de prompt
+# Utilitario para crear una plantilla de prompt
 from langchain_core.prompts import PromptTemplate
 
-#Utilitario para convertir la estructura string a json
+# Utilitario para convertir la estructura string a json
 import json
 
 ## #######################################################################################################
 ## @section Clase
 ## #######################################################################################################
 
-#Definición de clase
+
+# Definición de clase
 class AgenteDeContexto:
 
-  def __init__(
-    self,
-    llm = None,
-    condiciones = None
-  ):
-    #Guardamos los atributos
-    self.llm = llm
-    self.condiciones = condiciones
+    def __init__(self, llm=None, condiciones=None):
+        # Guardamos los atributos
+        self.llm = llm
+        self.condiciones = condiciones
 
-    #Plantilla de prompt
-    self.promptTemplate = PromptTemplate.from_template("""
+        # Plantilla de prompt
+        self.promptTemplate = PromptTemplate.from_template(
+            """
       Vas a revisar que los mensajes que recibas cumplan estas condiciones
 
       {condiciones}
@@ -59,32 +57,55 @@ class AgenteDeContexto:
       El mensaje es el siguiente:
 
       {mensaje}
-    """)
+    """
+        )
 
-  #Envía un mensaje
-  def enviarMensaje(
-      self,
-      prompt = None
-  ):
-    respuesta = None
+    # Envía un mensaje
+    def enviarMensaje(self, prompt=None):
+        if not prompt:
+            return {
+                "status": "ERROR",
+                "message": "No se proporcionó un mensaje para validar.",
+            }
+            
+        # Convertimos el mensaje a string
+        mensaje: str = ""
+        if isinstance(prompt, dict) and "contenido" in prompt:
+            mensaje = prompt["contenido"]
+        elif isinstance(prompt, str):
+            mensaje: str = prompt
+        else:
+            return {
+                "status": "ERROR",
+                "message": f"Formato de prompt no soportado: {type(prompt)}",
+            }
 
-    #Creamos la consulta
-    consulta = self.promptTemplate.format(
-      condiciones = self.condiciones,
-      mensaje = prompt
-    )
+        mensaje_limpio: str = mensaje.strip()
 
-    #Invocamos el modelo y reemplazamos la marca "json"
-    respuestaDelModelo = self.llm.invoke(consulta).content.replace("```json", "").replace("```", "")
+        if mensaje_limpio == "No se pudo transcribir el audio con Azure.":
+            return {
+                "status": "PROMPT_NO_VALIDO",
+                "message": "No se pudo transcribir el audio con Azure.",
+            }
 
-    #La convertimos a JSON
-    try:
-        respuesta = json.loads(respuestaDelModelo)
-    except Exception as e:
-        respuesta = {
-            "status": "ERROR",
-            "message": f"Ocurrió un error al parsear la respuesta del modelo: {respuestaDelModelo}"
-        }
+        # Creamos la consulta
+        consulta = self.promptTemplate.format(
+            condiciones=self.condiciones, mensaje=prompt
+        )
 
-    #Devolvemos el contenido de la respuesta
-    return respuesta
+        # Invocamos el modelo y reemplazamos la marca "json"
+        respuestaDelModelo = (
+            self.llm.invoke(consulta).content.replace("```json", "").replace("```", "")
+        )
+
+        # La convertimos a JSON
+        try:
+            respuesta = json.loads(respuestaDelModelo)
+        except Exception as e:
+            respuesta = {
+                "status": "ERROR",
+                "message": f"Ocurrió un error al parsear la respuesta del modelo: {respuestaDelModelo}",
+            }
+
+        # Devolvemos el contenido de la respuesta
+        return respuesta

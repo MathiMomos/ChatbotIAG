@@ -12,7 +12,7 @@ def esArchivoExcel(rutaArchivo):
     extension = os.path.splitext(rutaArchivo)[1].lower()
     return extension in ['.xlsx', '.xls']
 
-def cargarArchivoExcel(rutaDeArchivo, nombreDeBaseDeConocimiento):
+def cargarArchivoExcel(rutaDeArchivo, nombreDeBaseDeConocimiento: str):
     chunks = obtenerChunksDeExcelPorHoja(rutaDeArchivo)
 
     # Conectarse a la base de conocimiento
@@ -51,10 +51,10 @@ def detectar_fila_encabezado(rutaArchivo, hoja, max_filas=10):
             return idx
     return 0
 
-def obtenerChunksDeHojaExcel(rutaArchivo, hojaSeleccionada):
+def obtenerChunksDeHojaExcel(rutaArchivo, hojaSeleccionada: int):
     try:
         fila_encabezado = detectar_fila_encabezado(rutaArchivo, hojaSeleccionada)
-        df = pd.read_excel(rutaArchivo, sheet_name=hojaSeleccionada, header=fila_encabezado)
+        df = pd.read_excel(rutaArchivo, sheet_name=hojaSeleccionada, header=fila_encabezado) #type: ignore
 
         if df.empty:
             raise Exception(f"La hoja '{hojaSeleccionada}' está vacía o mal estructurada.")
