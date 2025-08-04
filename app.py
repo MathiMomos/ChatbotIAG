@@ -7,6 +7,7 @@ from src.util import util_audio as ua
 from src.util import util_llm
 from src.util import util_images
 from src.util import util_diagrams
+from src.util import util_charts
 from src.util import util_images as ui
 
 app = Flask(__name__)
@@ -75,11 +76,36 @@ def image():
 
 @app.route("/diagram", methods=["POST"])
 def diagram():
-    datos = request.get_json()
-    prompt = datos.get("prompt")
-    json_diagrama = util_diagrams.generar_json_diagrama(prompt)
+    try:
+        datos = request.get_json()
+        prompt = datos.get("prompt")
+        
+        if not prompt:
+            return jsonify({"error": "No se proporcionó un prompt"}), 400
+            
+        json_diagrama = util_diagrams.generar_json_diagrama(prompt)
+        
+        return jsonify({"contenido": "diagrama", "valor": json_diagrama})
+    except Exception as e:
+        print(f"Error en endpoint diagram: {e}")
+        return jsonify({"error": f"Error interno del servidor: {str(e)}"}), 500
 
-    return jsonify({"contenido": "diagrama", "valor": json_diagrama})
+
+@app.route("/chart", methods=["POST"])
+def chart():
+    try:
+        datos = request.get_json()
+        prompt = datos.get("prompt")
+        
+        if not prompt:
+            return jsonify({"error": "No se proporcionó un prompt"}), 400
+            
+        chart_resultado = util_charts.generar_chart_estadistico(prompt)
+        
+        return jsonify({"contenido": "chart", "valor": chart_resultado})
+    except Exception as e:
+        print(f"Error en endpoint chart: {e}")
+        return jsonify({"error": f"Error interno del servidor: {str(e)}"}), 500
 
 
 if __name__ == "__main__":
