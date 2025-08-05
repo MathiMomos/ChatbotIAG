@@ -1,5 +1,5 @@
-# Usa Python 3.13 como base
-FROM python:3.13.0a5-slim
+# Usa Python 3.12 como base
+FROM python:3.12-slim
 
 # Establece el directorio de trabajo
 WORKDIR /app
