@@ -1,3 +1,4 @@
+from src.flow.FlowChatbot import FlowChatbot
 import os
 
 from flask import Flask, render_template, request, jsonify
@@ -11,17 +12,27 @@ from src.util import util_images
 from src.util import util_diagrams
 from src.util import util_charts
 from src.util import util_images as ui
-
+from flask import session
+from langgraph.checkpoint.memory import InMemorySaver
+import uuid
 app = Flask(__name__)
+app.secret_key = os.urandom(24)
 
-chatbot = FlowChatbot(
+chatbot: FlowChatbot = FlowChatbot(
     archivoDeUsuario=key.require("ARCHIVO_USUARIO_DIR"),
     basesDeConocimiento=ubc.obtenerBaseDeConocimiento(),
 )
 
+chatbot.grafo = chatbot.constructor.compile(checkpointer=InMemorySaver())
+
+@app.before_request
+def ensureThread():
+    if "thread_id" not in session:
+        session["thread_id"] = str(uuid.uuid4())
 
 @app.route("/")
 def home():
+    chatbot.reiniciar_memoria_del_chatbot()
     return render_template("index.html")
 
 
@@ -46,9 +57,11 @@ def chat():
     print("FLASK ENVIA AL FLUJO:", promptUsuario)
 
     # 3. Ejecuta el flujo y devuelve la respuesta
-    respuestaModelo = chatbot.ejecutar(prompt=promptUsuario, base=usarBase)
+    config = {"configurable": {"thread_id": session["thread_id"]}}
+    respuestaModelo = chatbot.ejecutar(prompt=promptUsuario, base=usarBase, config=config)
+    state = chatbot.grafo.get_state(config)
     print("DEBUG ▶︎ Salida del grafo:", respuestaModelo)
-    print("DEBUG ▶︎ Tipo:", type(respuestaModelo))
+    print("DEBUG THREAT: ",state.values)
     return jsonify({"respuesta": respuestaModelo})
 
 
@@ -111,5 +124,4 @@ def chart():
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(debug=True)

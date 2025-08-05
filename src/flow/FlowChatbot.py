@@ -16,6 +16,9 @@
 ## #######################################################################################################
 
 #Utilitario para definir un grafo de LangGraph
+
+from src.agent.AgenteDeContexto import AgenteDeContexto
+from flask.globals import session
 from langgraph.graph import StateGraph
 
 from src.util.util_bases_de_conocimiento import obtenerBaseDeConocimiento
@@ -37,6 +40,9 @@ from src.agent.AgenteDeAnalisis import *
 
 from src.agent.AgenteDeDiagramas import *
 
+from src.agent.AgenteDeResumen import *
+
+from src.agent.AgenteDeSupervision import *
 ## #######################################################################################################
 ## @section Clase
 ## #######################################################################################################
@@ -61,7 +67,6 @@ class FlowChatbot:
 
     #Dibujamos el grafo
     self.dibujadoDeGrafo()
-
   #Crea los objetos para el flujo
   def creacionDeObjetos(
     self, 
@@ -110,7 +115,7 @@ Eres un asistente que responde preguntas sobre la conferencia en una universidad
 la conferencia se llama "IAG para la equidad social: Potencial y Barreras". Al contestar debes
 seguir las siguientes reglas ESTRICTAMENTE:
 
-1. SOLO puedes responder preguntas usando EXCLUSIVAMENTE la información de tu base de conocimiento
+1. SOLO puedes responder preguntas usando la información de tu base de conocimiento
 2. Si el usuario pregunta algo que NO está en tu base de conocimiento, debes responder EXACTAMENTE: "Lo siento, no puedo responder esto 😔"
 3. NO inventes información, NO uses conocimiento general, SOLO usa lo que está almacenado en tu base de conocimiento
 4. Debes contestar en un lenguaje formal pero amigable
@@ -157,9 +162,18 @@ También considera esta información del usuario:
       llm = obtenerModelo()
     )
 
+    self.agenteDeResumen = AgenteDeResumen(
+      llm = obtenerModelo()
+    )
+    
+    self.agenteSupervisor = AgenteSupervisor(
+      llm = obtenerModelo()
+    )
   #Implementamos los nodos
   def implementacionDeNodos(self):
 
+
+      
     #Nodo de Agente de Contexto
     def node_a1_agenteDeContexto(state: dict) -> dict:
       #Definimos la salida
@@ -249,6 +263,14 @@ También considera esta información del usuario:
       print(state)
       return output
 
+    def node_router(state: dict) -> dict:
+      mensaje = state["prompt"]["contenido"]
+      print   ("Ejecutando node_router...")
+      accion = self.agenteSupervisor.clasificar(mensaje)
+      salida = dict(state)
+      salida["accion"] = accion
+      return salida
+    
     #Nodo de Agente de Chatbot
     def node_a5_agenteDeChatbot(state: dict) -> dict:
     # Definimos la salida
@@ -272,59 +294,30 @@ También considera esta información del usuario:
       print(state)
       return output
 
-    #def node_a6_agenteDeImagenes(state: dict) -> dict:
-    #    # Definimos la salida
-    #    output = state
-    #
-    #    # Imprimimos un mensaje para saber en qué nodo estamos
-    #    print("Ejecutando node_a6_agenteDeImagenes...")
-    #
-    #
-    #    # Obtenemos los parámetros
-    #    contenido = state["output"]["respuesta"]
-    #
-    #    # Ejecutamos el agente de imágenes
-    #    respuesta = responderImagen(obtenerModeloImagen(), contenido)
-    #
-    #    print(respuesta)
-    #
-    #    # Construimos la salida
-    #    output["output"]["respuesta"] += respuesta
-    #    print("Respuesta del agente de imágenes:", respuesta)
-    #    # Devolvemos la salida
-    #    return output
-
-    #def node_a7_agentedeDiagramas(state: dict) -> dict:
-    #    # Definimos la salida
-    #    output = state
-    #
-    #    # Imprimimos un mensaje para saber en qué nodo estamos
-    #    print("Ejecutando node_a7_agentedeDiagramas...")
-    #
-    #    # Obtenemos los parámetros
-    #    contenido = state["output"]["respuesta"]
-    #
-    #    # Ejecutamos el agente de diagramas
-    #    respuesta = self.agenteDeDiagramas.enviarMensaje(contenido)
-    #
-    #    # Construimos la salida
-    #    output["output"]["diagrama"] = respuesta
-    #
-    #    # Devolvemos la salida
-    #    print(state)
-    #    print("---")
-    #    print(respuesta)
-    #    return output
+    def node_a6_agenteDeResumen(state: dict) -> dict:
+      output = state
+      output["output"] = {}
+      
+      print ("Ejecutando node_a6_agenteDeResumen...")
+      historial = self.agenteDeChatbot.chat_sin_kb.memory.chat_memory.messages
+      resumen = self.agenteDeResumen.resumir(historial)
+      output["output"]["respuesta"] = resumen
+      
+      print (state)
+      return output
+    
         
     #Construimos un grafo que recibe JSONs
     self.constructor = StateGraph(dict)
 
     #Agregamos los nodos dentro del grafo
+    self.constructor.add_node("node_router", node_router)
     self.constructor.add_node("node_a1_agenteDeContexto", node_a1_agenteDeContexto)
     self.constructor.add_node("node_a2_promptNoValido", node_a2_promptNoValido)
     self.constructor.add_node("node_a3_agenteDeMemoriaLargoPlazo", node_a3_agenteDeMemoriaLargoPlazo)
     self.constructor.add_node("node_a4_informacionPorRecordar", node_a4_informacionPorRecordar)
     self.constructor.add_node("node_a5_agenteDeChatbot", node_a5_agenteDeChatbot)
+    self.constructor.add_node("node_a6_agenteDeResumen", node_a6_agenteDeResumen)
     #self.constructor.add_node("node_a6_agenteDeImagenes", node_a6_agenteDeImagenes)
     #self.constructor.add_node("node_a7_agenteDeDiagramas", node_a7_agentedeDiagramas)
 
@@ -342,17 +335,20 @@ También considera esta información del usuario:
     #Agregamos un flujo condicional
     self.constructor.add_conditional_edges("node_a3_agenteDeMemoriaLargoPlazo", lambda state: state["node_a3_agenteDeMemoriaLargoPlazo"]["status"], {
         "INFORMACION_POR_RECORDAR": "node_a4_informacionPorRecordar",
-        "NO_INFORMACION_POR_RECORDAR": "node_a5_agenteDeChatbot"
+        "NO_INFORMACION_POR_RECORDAR": "node_router"
     })
 
     #Conectamos un flujo secuencial
-    self.constructor.add_edge("node_a4_informacionPorRecordar", "node_a5_agenteDeChatbot")
+    self.constructor.add_edge("node_a4_informacionPorRecordar", "node_router")
     #self.constructor.add_edge("node_a5_agenteDeChatbot", "node_a7_agenteDeDiagramas")
-
+    self.constructor.add_conditional_edges("node_router", lambda state: state["accion"], {
+        "RESUMEN": "node_a6_agenteDeResumen",
+        "CHAT": "node_a5_agenteDeChatbot"
+    })
     #Indicamos los nodos en donde finaliza el grafo
     self.constructor.set_finish_point("node_a2_promptNoValido")
     self.constructor.set_finish_point("node_a5_agenteDeChatbot")
-
+    self.constructor.set_finish_point("node_a6_agenteDeResumen")
     #Construimos el grafo
     self.grafo = self.constructor.compile()
 
@@ -368,11 +364,12 @@ También considera esta información del usuario:
     }
   
   #Ejecución
-  def ejecutar(self, prompt, base):
-
+  def ejecutar(self, prompt, base, config = None):
+  
     #Ejecutamos el grafo
     respuesta = self.grafo.invoke(
-      {"prompt": prompt, "base": base}
+      {"prompt": prompt, "base": base},
+      config = config
     )
 
     #Devolvemos la respuesta
@@ -394,3 +391,9 @@ También considera esta información del usuario:
   def escribirArchivo(self, texto):
       with open(self.archivoDeUsuario, 'w', encoding='utf-8') as archivo:
           archivo.write(texto + '\n')
+  
+  def reiniciar_memoria_del_chatbot(self):
+        """Pasa la orden de reinicio al agente de chatbot."""
+        print("Reiniciando la memoria del chatbot...")
+        if hasattr(self, 'agenteDeChatbot'):
+            self.agenteDeChatbot.reiniciar_memoria()

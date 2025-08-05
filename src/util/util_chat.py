@@ -31,11 +31,11 @@ from langchain.chains import RetrievalQA
 
 
 # Abre la sesión de chat con el modelo
-def abrirSesionDeChat(llm=None, contexto: str = ""):
+def abrirSesionDeChat(llm=None, contexto: str = "", memoria = None):
     # Creamos la memoria a corto plazo
-    memoria = ConversationBufferMemory()
-
     # Agregamos la "personalidad" a nuestra IA
+    if memoria is None:
+        memoria = ConversationBufferMemory()
     memoria.chat_memory.add_ai_message(contexto)
 
     # Creamos la conversación de chat
@@ -50,11 +50,10 @@ def abrirSesionDeChat(llm=None, contexto: str = ""):
 
 # Abre una sesión de chat y adjunta una base de conocimiento
 def abrirSesionDeChatConBaseDeConocimiento(
-    llm=None, basesDeConocimiento=None, contexto: str = ""
+    llm=None, basesDeConocimiento=None, contexto: str = "", memoria = None
 ):
-    # Creamos la memoria a corto plazo
-    memoria = ConversationBufferMemory()
-
+    if memoria is None:
+        memoria = ConversationBufferMemory()
     # Agregamos la "personalidad" a nuestra IA
     memoria.chat_memory.add_ai_message(contexto)
 
