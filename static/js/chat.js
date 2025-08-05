@@ -8,6 +8,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const closeImagePanelButton = document.getElementById('close-image-panel');
     const imageDisplayArea = document.querySelector('.image-display-area');
 
+    const imageNavControls = document.getElementById('image-nav-controls');
+    const prevItemBtn = document.getElementById('prev-item-btn');
+    const nextItemBtn = document.getElementById('next-item-btn');
+    const itemCounter = document.getElementById('item-counter');
+    let currentItemIndex = 0;
+    let totalItems = 0;
+
     let mediaRecorder;
     let audioChunks = [];
     let isRecording = false;
@@ -18,6 +25,36 @@ document.addEventListener('DOMContentLoaded', function () {
     let audioPlayerId = 0;
     let usarBaseConocimiento = true;
     let isGeneratingContent = false;
+
+    function updateCarousel() {
+        const items = imageDisplayArea.querySelectorAll('.generated-image-container, .generated-diagram-container, .generated-chart-container');
+        totalItems = items.length;
+
+        if (totalItems > 0) {
+            imageNavControls.style.display = 'flex';
+            imageDisplayArea.style.transform = `translateX(-${currentItemIndex * 100}%)`;
+            itemCounter.textContent = `${currentItemIndex + 1} / ${totalItems}`;
+            prevItemBtn.disabled = currentItemIndex === 0;
+            nextItemBtn.disabled = currentItemIndex === totalItems - 1;
+        } else {
+            imageNavControls.style.display = 'none';
+        }
+    }
+
+    prevItemBtn.addEventListener('click', () => {
+        if (currentItemIndex > 0) {
+            currentItemIndex--;
+            updateCarousel();
+        }
+    });
+
+    nextItemBtn.addEventListener('click', () => {
+        if (currentItemIndex < totalItems - 1) {
+            currentItemIndex++;
+            updateCarousel();
+        }
+    });
+
 
     // --- LOGICA DEL PANEL DE IMAGEN ---
     async function generateImage(messageElement) {
@@ -71,13 +108,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
             loadingIndicator.replaceWith(imageContainer);
             imageDisplayArea.scrollTop = imageDisplayArea.scrollHeight;
-
         } catch (error) {
             console.error("Error al generar la imagen:", error);
             loadingIndicator.remove();
             addMessage("Lo siento, no se pudo generar la imagen.", "bot");
         } finally {
             isGeneratingContent = false;
+            currentItemIndex = 0;
+            updateCarousel();
         }
     }
 
@@ -91,38 +129,21 @@ document.addEventListener('DOMContentLoaded', function () {
         isGeneratingContent = true;
         document.body.classList.add('image-view-active');
 
-        // Obtener texto del mensaje, funcionando tanto para mensajes del bot como del usuario
         let messageText;
         if (messageElement.classList.contains('bot-message')) {
-            // Para mensajes del bot, buscar en el div del contenido
             messageText = messageElement.querySelector('div').innerText || messageElement.textContent;
         } else if (messageElement.classList.contains('user-message')) {
-            // Para mensajes del usuario, obtener directamente el texto
             messageText = messageElement.textContent || messageElement.innerText;
         } else {
-            // Fallback para cualquier otro tipo de mensaje
             messageText = messageElement.querySelector('div')?.innerText || messageElement.textContent || messageElement.innerText;
         }
         
         console.log("Generando gráfico estadístico para el mensaje:", messageText);
-
-        const loadingIndicator = document.createElement('div');
-        loadingIndicator.className = 'generated-chart-container';
-        loadingIndicator.innerHTML = `<div class="typing-indicator" style="padding: 20px; margin: auto;"><span></span><span></span><span></span></div>`;
-
-        const imageDisplayArea = document.getElementById('image-panel').querySelector('.image-display-area');
         
-        // Limpiar gráficos anteriores
-        const existingCharts = imageDisplayArea.querySelectorAll('.generated-chart-container');
-        existingCharts.forEach(chart => chart.remove());
-        
-        const placeholderText = imageDisplayArea.querySelector('p');
-        if (placeholderText) {
-            placeholderText.remove();
-        }
-
-        imageDisplayArea.appendChild(loadingIndicator);
-        imageDisplayArea.scrollTop = imageDisplayArea.scrollHeight;
+        const loadingContainer = document.createElement('div');
+        loadingContainer.style.cssText = 'width:100%; height:100%; display:flex; justify-content:center; align-items:center; flex-shrink:0;';
+        loadingContainer.innerHTML = `<div class="typing-indicator" style="padding: 20px; margin: auto;"><span></span><span></span><span></span></div>`;
+        imageDisplayArea.appendChild(loadingContainer);
 
         try {
             const response = await fetch('/chart', {
@@ -133,32 +154,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 })
             });
 
-            console.log("Respuesta del servidor:", response.status);
-
             if (!response.ok) {
                 throw new Error(`Error del servidor: ${response.status}`);
             }
 
             const data = await response.json();
-            console.log("Datos del gráfico recibidos:", data);
             
-            if (data.error) {
-                throw new Error(data.error);
-            }
-            
-            if (data.valor && data.valor.error) {
-                throw new Error(data.valor.error);
-            }
-            
-            if (!data.valor || !data.valor.imagen) {
-                throw new Error("Los datos del gráfico no son válidos");
+            if (data.error || (data.valor && data.valor.error) || !data.valor || !data.valor.imagen) {
+                throw new Error(data.error || data.valor?.error || "Los datos del gráfico no son válidos");
             }
 
-            // Crear el contenedor del gráfico
             const chartContainer = document.createElement('div');
             chartContainer.className = 'generated-chart-container';
             
-            // Crear tooltip con información del gráfico
             const tooltip = document.createElement('div');
             tooltip.className = 'chart-tooltip';
             tooltip.innerHTML = `
@@ -174,30 +182,21 @@ document.addEventListener('DOMContentLoaded', function () {
             const img = document.createElement('img');
             img.src = data.valor.imagen;
             img.alt = `Gráfico: ${data.valor.titulo || 'Estadístico'}`;
-            img.style.cssText = 'max-width: 100%; height: auto; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.3s ease;';
+            img.style.cursor = 'pointer';
             
-            // Eventos para mostrar/ocultar tooltip
             img.addEventListener('mouseenter', (e) => {
                 tooltip.style.display = 'block';
-                tooltip.style.left = (e.pageX + 10) + 'px';
-                tooltip.style.top = (e.pageY - 10) + 'px';
                 document.body.appendChild(tooltip);
-                img.style.transform = 'scale(1.02)';
             });
-            
             img.addEventListener('mousemove', (e) => {
                 tooltip.style.left = (e.pageX + 10) + 'px';
                 tooltip.style.top = (e.pageY - 10) + 'px';
             });
-            
             img.addEventListener('mouseleave', () => {
                 if (document.body.contains(tooltip)) {
                     document.body.removeChild(tooltip);
                 }
-                img.style.transform = 'scale(1)';
             });
-            
-            // Evento para ampliar el gráfico al hacer clic
             img.addEventListener('click', () => {
                 const modal = document.createElement('div');
                 modal.className = 'chart-modal';
@@ -210,25 +209,29 @@ document.addEventListener('DOMContentLoaded', function () {
                 `;
                 document.body.appendChild(modal);
                 
-                // Cerrar modal
                 modal.addEventListener('click', (e) => {
                     if (e.target === modal || e.target.className === 'modal-close') {
                         document.body.removeChild(modal);
                     }
                 });
             });
-            
-            chartContainer.appendChild(img);
-            loadingIndicator.replaceWith(chartContainer);
 
-            imageDisplayArea.scrollTop = imageDisplayArea.scrollHeight;
+            chartContainer.appendChild(img);
+            loadingContainer.remove();
+            imageDisplayArea.appendChild(chartContainer);
+
+            // ===== MODIFICACIÓN FINAL: ACTUALIZAR CARRUSEL =====
+            currentItemIndex = imageDisplayArea.children.length - 1;
+            updateCarousel();
 
         } catch (error) {
             console.error("Error al generar el gráfico:", error);
-            loadingIndicator.remove();
+            loadingContainer.remove();
             addMessage("Lo siento, no se pudo generar el gráfico estadístico.", "bot");
         } finally {
             isGeneratingContent = false;
+            currentItemIndex = 0;
+            updateCarousel();
         }
     }
 
@@ -236,52 +239,38 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function generateDiagram(messageElement) {
         if (isGeneratingContent) {
-            throw new Error("Ya se está generando un diagrama.");
+            throw new Error("Ya se está generando un diagrama."); 
         }
 
-        // Verificar que GoJS esté disponible
         if (typeof go === 'undefined') {
-            console.error("GoJS no está cargado");
-            addMessage("Error: GoJS no está disponible. Verifica la conexión a internet.", "bot");
-            return;
+            console.error("GoJS no está cargado"); 
+            addMessage("Error: GoJS no está disponible. Verifica la conexión a internet.", "bot"); 
+            return; 
         }
 
-        isGeneratingContent = true;
-        document.body.classList.add('image-view-active');
+        isGeneratingContent = true; 
+        document.body.classList.add('image-view-active'); 
 
-        // Obtener texto del mensaje, funcionando tanto para mensajes del bot como del usuario
         let messageText;
         if (messageElement.classList.contains('bot-message')) {
-            // Para mensajes del bot, buscar en el div del contenido
             messageText = messageElement.querySelector('div').innerText || messageElement.textContent;
         } else if (messageElement.classList.contains('user-message')) {
-            // Para mensajes del usuario, obtener directamente el texto
-            messageText = messageElement.textContent || messageElement.innerText;
+            messageText = messageElement.textContent || messageElement.innerText; 
         } else {
-            // Fallback para cualquier otro tipo de mensaje
-            messageText = messageElement.querySelector('div')?.innerText || messageElement.textContent || messageElement.innerText;
+            messageText = messageElement.querySelector('div')?.innerText || messageElement.textContent || messageElement.innerText; 
         }
         
-        console.log("Generando diagrama para el mensaje:", messageText);
+        console.log("Generando diagrama para el mensaje:", messageText); 
 
-        const loadingIndicator = document.createElement('div');
-        loadingIndicator.className = 'generated-diagram-container';
-        loadingIndicator.innerHTML = `<div class="typing-indicator" style="padding: 20px; margin: auto;"><span></span><span></span><span></span></div>`;
+        const loadingContainer = document.createElement('div');
+        loadingContainer.style.cssText = 'width:100%; height:100%; display:flex; justify-content:center; align-items:center; flex-shrink:0;';
+        loadingContainer.innerHTML = `<div class="typing-indicator" style="padding: 20px; margin: auto;"><span></span><span></span><span></span></div>`;
+        imageDisplayArea.appendChild(loadingContainer);
 
-        const imageDisplayArea = document.getElementById('image-panel').querySelector('.image-display-area');
+        // --- MODIFICACIÓN CLAVE: NO LIMPIAR DIAGRAMAS ANTERIORES ---
+        // const existingDiagrams = imageDisplayArea.querySelectorAll('.generated-diagram-container');
+        // existingDiagrams.forEach(diagram => diagram.remove()); // <-- LÍNEA COMENTADA/ELIMINADA
         
-        // Limpiar diagramas anteriores
-        const existingDiagrams = imageDisplayArea.querySelectorAll('.generated-diagram-container');
-        existingDiagrams.forEach(diagram => diagram.remove());
-        
-        const placeholderText = imageDisplayArea.querySelector('p');
-        if (placeholderText) {
-            placeholderText.remove();
-        }
-
-        imageDisplayArea.appendChild(loadingIndicator);
-        imageDisplayArea.scrollTop = imageDisplayArea.scrollHeight;
-
         try {
             const response = await fetch('/diagram', {
                 method: 'POST',
@@ -291,197 +280,97 @@ document.addEventListener('DOMContentLoaded', function () {
                 })
             });
 
-            console.log("Respuesta del servidor:", response.status);
-
             if (!response.ok) {
-                throw new Error(`Error del servidor: ${response.status}`);
+                throw new Error(`Error del servidor: ${response.status}`); 
             }
 
-            const data = await response.json();
-            console.log("Datos recibidos:", data);
-            
-            if (data.error) {
-                throw new Error(data.error);
+            const data = await response.json(); 
+            if (data.error || (data.valor && data.valor.error) || !data.valor || !data.valor.nodes) {
+                throw new Error(data.error || data.valor?.error || "Los datos del diagrama no son válidos");
             }
             
-            if (data.valor && data.valor.error) {
-                throw new Error(data.valor.error);
-            }
+            const diagramContainer = document.createElement('div'); 
+            diagramContainer.className = 'generated-diagram-container'; 
             
-            if (!data.valor || !data.valor.nodes) {
-                throw new Error("Los datos del diagrama no son válidos");
-            }
-
-            // Crear un nuevo contenedor para este diagrama específico
-            const diagramContainer = document.createElement('div');
-            diagramContainer.className = 'generated-diagram-container';
+            const diagramId = 'diagram-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9);
+            diagramContainer.innerHTML = `<div id="${diagramId}" style="width:100%; height:100%; background-color: white; border-radius: 10px;"></div>`;
             
-            // Generar un ID único para este diagrama con timestamp más preciso
-            let diagramId;
-            let attempts = 0;
-            do {
-                diagramId = 'diagram-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9);
-                attempts++;
-            } while (document.getElementById(diagramId) && attempts < 10);
+            loadingContainer.remove();
+            imageDisplayArea.appendChild(diagramContainer);
+
+            // ===== MODIFICACIÓN FINAL: ACTUALIZAR CARRUSEL ANTES DE RENDERIZAR EL DIAGRAMA =====
+            currentItemIndex = imageDisplayArea.children.length - 1;
+            updateCarousel();
             
-            // Crear solo el contenedor del diagrama sin información visible
-            diagramContainer.innerHTML = `<div id="${diagramId}" style="width:100%; height:400px; border: 1px solid #ccc; background-color: white; border-radius: 10px; margin-bottom: 10px;"></div>`;
-
-            loadingIndicator.replaceWith(diagramContainer);
-
-            // Esperar un momento para que el DOM se actualice
             setTimeout(() => {
                 try {
-                    // Procesar los datos del diagrama primero
-                    let diagramData = data.valor;
-                    
-                    // Si no hay datos válidos, crear un diagrama de ejemplo
-                    if (!diagramData || !diagramData.nodes || diagramData.nodes.length === 0) {
-                        console.warn("No se recibieron datos válidos, usando diagrama de ejemplo");
-                        diagramData = {
-                            nodes: [
-                                { key: "1", text: "Tema Principal", color: "lightblue" },
-                                { key: "2", text: "Subtema 1", color: "lightgreen", parent: "1" },
-                                { key: "3", text: "Subtema 2", color: "lightcoral", parent: "1" }
-                            ],
-                            links: [
-                                { from: "1", to: "2" },
-                                { from: "1", to: "3" }
-                            ]
-                        };
-                    }
+                    let diagramData = data.valor; 
+                    const hasParentProperty = diagramData.nodes && diagramData.nodes.some(node => node.parent); 
+                    const targetDiv = document.getElementById(diagramId); 
 
-                    // Determinar el tipo de layout basado en los datos
-                    let hasParentProperty = diagramData.nodes && diagramData.nodes.some(node => node.parent);
-                    
-                    // Verificar que el div existe y no tiene un diagrama ya asociado
-                    const targetDiv = document.getElementById(diagramId);
                     if (!targetDiv) {
-                        throw new Error(`No se pudo encontrar el div con ID: ${diagramId}`);
+                        throw new Error(`No se pudo encontrar el div con ID: ${diagramId}`); 
                     }
 
-                    // Limpiar cualquier diagrama previo que pueda estar asociado
-                    if (targetDiv.diagram) {
-                        targetDiv.diagram.div = null;
-                    }
+                    const $ = go.GraphObject.make; 
+                    const myDiagram = new go.Diagram(diagramId); 
 
-                    // Inicializar GoJS en el nuevo div
-                    const $ = go.GraphObject.make;
-                    const myDiagram = new go.Diagram(diagramId);
+                    myDiagram.initialContentAlignment = go.Spot.Center; 
+                    myDiagram.undoManager.isEnabled = true; 
 
-                    // Configurar propiedades básicas del diagrama
-                    myDiagram.initialContentAlignment = go.Spot.Center;
-                    myDiagram.allowZoom = true;
-                    myDiagram.allowHorizontalScroll = true;
-                    myDiagram.allowVerticalScroll = true;
-                    myDiagram.undoManager.isEnabled = true;
-
-                    // Configurar el layout del diagrama según el tipo
                     if (hasParentProperty) {
-                        // Layout para organigramas y estructuras jerárquicas
                         myDiagram.layout = $(go.TreeLayout, {
                             angle: 90,
                             layerSpacing: 80,
                             nodeSpacing: 40,
-                            compaction: go.TreeLayout.CompactionNone,
-                            alignment: go.TreeLayout.AlignmentCenterChildren,
-                            arrangement: go.TreeLayout.ArrangementHorizontal
                         });
                     } else {
-                        // Layout para procesos y flujos secuenciales
                         myDiagram.layout = $(go.LayeredDigraphLayout, {
                             direction: 90,
                             layerSpacing: 60,
                             columnSpacing: 40,
-                            setsPortSpots: false
                         });
                     }
 
-                    // Configurar el template de nodos
                     myDiagram.nodeTemplate =
                         $(go.Node, "Auto",
-                            { 
-                                selectionChanged: function(node) {
-                                    node.diagram.clearHighlighteds();
-                                    if (node.isSelected) {
-                                        node.findLinksConnected().each(function(link) {
-                                            link.isHighlighted = true;
-                                        });
-                                    }
-                                }
-                            },
                             $(go.Shape, "RoundedRectangle", { 
                                 strokeWidth: 2, 
                                 stroke: "#333",
                                 fill: "white",
-                                portId: "",
-                                cursor: "pointer",
-                                minSize: new go.Size(120, 40)
-                            },
-                                new go.Binding("fill", "color")),
+                            }, new go.Binding("fill", "color")),
                             $(go.TextBlock, { 
                                 margin: 12, 
                                 font: "bold 13px sans-serif", 
                                 stroke: "#000",
-                                maxSize: new go.Size(180, NaN), 
-                                wrap: go.TextBlock.WrapFit,
                                 textAlign: "center",
-                                verticalAlignment: go.Spot.Center
-                            },
-                                new go.Binding("text", "text"))
+                            }, new go.Binding("text", "text"))
                         );
 
-                    // Configurar el template de enlaces
                     myDiagram.linkTemplate =
                         $(go.Link,
-                            { 
-                                routing: go.Link.Orthogonal, 
-                                corner: 8,
-                                selectable: false,
-                                reshapable: true,
-                                relinkableFrom: true,
-                                relinkableTo: true
-                            },
-                            $(go.Shape, { 
-                                strokeWidth: 2, 
-                                stroke: "#666"
-                            }),
-                            $(go.Shape, { 
-                                toArrow: "Standard", 
-                                fill: "#666", 
-                                stroke: "#666",
-                                scale: 1.3
-                            })
+                            { routing: go.Link.Orthogonal, corner: 8 },
+                            $(go.Shape, { strokeWidth: 2, stroke: "#666" }),
+                            $(go.Shape, { toArrow: "Standard", fill: "#666", stroke: "#666" })
                         );
 
-                    // Asegurar que todos los nodos tengan un color visible
                     if (diagramData.nodes) {
                         diagramData.nodes = diagramData.nodes.map(node => {
-                            if (!node.color || node.color === 'white' || node.color === 'transparent') {
-                                node.color = 'lightblue';  // Color por defecto
+                            if (!node.color || node.color === 'white') {
+                                node.color = 'lightblue';
                             }
                             return node;
                         });
                     }
                     
-                    // Crear el modelo apropiado según el tipo de datos
                     if (hasParentProperty) {
-                        // Usar TreeModel para datos jerárquicos con relaciones padre-hijo
                         myDiagram.model = new go.TreeModel(diagramData.nodes || []);
                     } else {
-                        // Usar GraphLinksModel para datos con enlaces explícitos
                         myDiagram.model = new go.GraphLinksModel(diagramData.nodes || [], diagramData.links || []);
                     }
-                    
-                    // Log interno para depuración (no visible para el usuario)
-                    console.log("Diagrama generado exitosamente con ID:", diagramId);
-                    console.log("Input procesado:", messageText.substring(0, 50) + "...");
-                    console.log("Output generado - Nodos:", diagramData.nodes?.length || 0, "Enlaces:", diagramData.links?.length || 0);
+
                 } catch (diagramError) {
                     console.error("Error al crear el diagrama GoJS:", diagramError);
-                    console.error("Input que causó el error:", messageText.substring(0, 50) + "...");
-                    
-                    // Mostrar mensaje de error en el contenedor del diagrama
                     const targetDiv = document.getElementById(diagramId);
                     if (targetDiv) {
                         targetDiv.innerHTML = `<div style="padding: 20px; color: red; text-align: center;">Error al generar el diagrama: ${diagramError.message}</div>`;
@@ -489,14 +378,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }, 100);
 
-            imageDisplayArea.scrollTop = imageDisplayArea.scrollHeight;
-
         } catch (error) {
             console.error("Error al generar el diagrama:", error);
-            loadingIndicator.remove();
+            loadingContainer.remove();
             addMessage("Lo siento, no se pudo generar el diagrama.", "bot");
         } finally {
             isGeneratingContent = false;
+            currentItemIndex = 0;
+            updateCarousel();
         }
     }
 
@@ -547,16 +436,11 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log('Cerrando panel de imagen...');
         document.body.classList.remove('image-view-active');
         
-        // Limpiar el contenido del diagrama
-        const diagramDiv = document.getElementById('myDiagramDiv');
-        if (diagramDiv) {
-            diagramDiv.innerHTML = '';
-            diagramDiv.style.display = 'none';
-        }
+        imageDisplayArea.innerHTML = '';
         
-        // Limpiar contenedores generados
-        const generatedContainers = imageDisplayArea.querySelectorAll('.generated-image-container, .generated-diagram-container, .generated-chart-container');
-        generatedContainers.forEach(container => container.remove());
+        currentItemIndex = 0;
+        totalItems = 0;
+        updateCarousel();
     });
 
     enviarButton.addEventListener('click', sendMessage);

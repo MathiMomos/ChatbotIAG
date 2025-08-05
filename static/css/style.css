@@ -88,21 +88,26 @@ body.image-view-active .image-panel {
 .image-display-area {
     flex-grow: 1;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
+    flex-direction: row;
+    justify-content: flex-start;
     align-items: center;
-    gap: 20px;
+    gap: 0;
     background-color: transparent;
     border-radius: 20px;
-    overflow-y: auto;
-    padding: 20px;
+    overflow: hidden;
+    padding: 0;
     box-sizing: border-box;
+    width: 100%;
+    transition: transform 0.4s ease-in-out;
 }
 
 .generated-image-container {
     width: 100%;
     max-width: 100%;
+    height: auto;
     flex-shrink: 0;
+    box-sizing: border-box;
+    padding: 20px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -119,10 +124,11 @@ body.image-view-active .image-panel {
 .generated-diagram-container {
     width: 100%;
     max-width: 100%;
+    height: auto;
     flex-shrink: 0;
     background-color: rgba(255, 255, 255, 0.9);
     border-radius: 15px;
-    padding: 10px;
+    padding: 20px;
     box-sizing: border-box;
     margin: 0;
     display: flex;
@@ -138,6 +144,7 @@ body.image-view-active .image-panel {
 .generated-chart-container {
     width: 100%;
     max-width: 100%;
+    height: auto;
     flex-shrink: 0;
     background-color: rgba(255, 255, 255, 0.95);
     border-radius: 15px;
@@ -335,9 +342,18 @@ body.image-view-active .chat-container {
     object-fit: contain;
 }
 
+#user-input {
+    flex-grow: 1;
+    margin-right: 10px;
+    padding: 10px;
+    border: none;
+    border-radius: 20px;
+    font-size: 1em;
+}
+
 /* Título */
 h1 {
-    position: absolute; /* o fixed */
+    position: absolute;
     top: 25px;
     left: 50%;
     padding: 40px;
@@ -408,6 +424,13 @@ h1 {
     word-wrap: break-word;
     overflow-wrap: break-word;
     line-height: 1.5;
+    max-width: 85%;
+    word-wrap: break-word;
+}
+
+.message img {
+    max-width: 100%;
+    height: auto;
 }
 
 .bot-message {
@@ -596,6 +619,51 @@ h1 {
     display: none;
 }
 
+
+/*Estilos panel de navegacion*/
+.image-nav-controls {
+    display: none;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    width: 100%;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.nav-arrow {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    line-height: 1;
+}
+
+.nav-arrow:hover {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.nav-arrow:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+#item-counter {
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
 /* Para tablets 1024px*/
 @media (max-width: 1024px) {
     body {
@@ -649,6 +717,8 @@ h1 {
 /* Para Móviles 768px(falta mejora de pantalla dividida para generador de imagenes y chat)*/
 @media (max-width: 768px) {
     body {
+        flex-direction: column;
+        overflow: hidden;
         padding: 0;
     }
 
@@ -709,6 +779,17 @@ h1 {
 
     .action-button {
         width: 42px;
+    }
+
+    #chat-container,
+    #image-display-area {
+        height: 50vh;
+        width: 100%;
+        overflow-y: auto;
+    }
+
+    .carousel-controls {
+        display: none;
     }
 }
 
