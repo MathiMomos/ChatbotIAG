@@ -11,3 +11,5 @@ flask
 langgraph
 pandas
 openpyxl
+matplotlib
+numpy

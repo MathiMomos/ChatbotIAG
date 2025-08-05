@@ -17,15 +17,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let audioPlayerId = 0;
     let usarBaseConocimiento = true;
-    let isGeneratingImage = false;
+    let isGeneratingContent = false;
 
     // --- LOGICA DEL PANEL DE IMAGEN ---
     async function generateImage(messageElement) {
-        if (isGeneratingImage) {
+        if (isGeneratingContent) {
             throw new Error("Ya se está generando una imagen.");
         }
 
-        isGeneratingImage = true;
+        isGeneratingContent = true;
         document.body.classList.add('image-view-active');
 
         const messageText = messageElement.querySelector('div').innerText || messageElement.textContent;
@@ -77,19 +77,18 @@ document.addEventListener('DOMContentLoaded', function () {
             loadingIndicator.remove();
             addMessage("Lo siento, no se pudo generar la imagen.", "bot");
         } finally {
-            isGeneratingImage = false;
+            isGeneratingContent = false;
         }
     }
 
     // --- LOGICA DEL GRÁFICO ESTADÍSTICO ---
-    let isGeneratingChart = false;
 
     async function generateChart(messageElement) {
-        if (isGeneratingChart) {
+        if (isGeneratingContent) {
             throw new Error("Ya se está generando un gráfico.");
         }
 
-        isGeneratingChart = true;
+        isGeneratingContent = true;
         document.body.classList.add('image-view-active');
 
         // Obtener texto del mensaje, funcionando tanto para mensajes del bot como del usuario
@@ -229,15 +228,14 @@ document.addEventListener('DOMContentLoaded', function () {
             loadingIndicator.remove();
             addMessage("Lo siento, no se pudo generar el gráfico estadístico.", "bot");
         } finally {
-            isGeneratingChart = false;
+            isGeneratingContent = false;
         }
     }
 
     // --- LOGICA DEL DIAGRAMA ---
-    let isGeneratingDiagram = false;
 
     async function generateDiagram(messageElement) {
-        if (isGeneratingDiagram) {
+        if (isGeneratingContent) {
             throw new Error("Ya se está generando un diagrama.");
         }
 
@@ -248,7 +246,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        isGeneratingDiagram = true;
+        isGeneratingContent = true;
         document.body.classList.add('image-view-active');
 
         // Obtener texto del mensaje, funcionando tanto para mensajes del bot como del usuario
@@ -498,7 +496,7 @@ document.addEventListener('DOMContentLoaded', function () {
             loadingIndicator.remove();
             addMessage("Lo siento, no se pudo generar el diagrama.", "bot");
         } finally {
-            isGeneratingDiagram = false;
+            isGeneratingContent = false;
         }
     }
 
