@@ -7,36 +7,31 @@
     <link href="images/logo.png" rel="logo" type="image/x-png">
     <title>Chatbot</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <!--Para el markdown obligatorio-->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/carousel.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <!-- Estilo markdown con colorcitos opcional eliminarlo pero le da facha al texto -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <!-- GoJS para diagramas -->
     <script src="https://unpkg.com/gojs@3.0.1/release/go.js"></script>
 
 </head>
 
 <body class="mode-normal">
-    <!-- Indicador del modo actual -->
     <div class="mode-indicator" id="mode-indicator"></div>
 
-    <!-- ===== NUEVO CONTENEDOR PRINCIPAL BASE DE CONOCIMIENTO ===== -->
     <div class="main-container page-transition" id="main-container">
-        <!-- barra de visualizacion  -->
         <div class="chat-container">
 
             <section class="chat">
                 <div class="header">
                     <div class="icon-container-number-container">
                         <div class="foco-container">
-                        <button id="foco-button" class="action-button" title="Cambiar modo">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 64 64">
-                                <path d="M32 6c-10 0-18 8-18 18 0 6.6 3.6 11.6 7 15 2.3 2.3 3 4 3 7h16c0-3 0.7-4.7 3-7 3.4-3.4 7-8.4 7-15 0-10-8-18-18-18z"/>
-                                <line x1="24" y1="52" x2="40" y2="52" />
-                                <line x1="24" y1="58" x2="40" y2="58" />
-                            </svg>
-                        </button>
+                            <button id="foco-button" class="action-button" title="Cambiar modo">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 64 64">
+                                    <path d="M32 6c-10 0-18 8-18 18 0 6.6 3.6 11.6 7 15 2.3 2.3 3 4 3 7h16c0-3 0.7-4.7 3-7 3.4-3.4 7-8.4 7-15 0-10-8-18-18-18z"/>
+                                    <line x1="24" y1="52" x2="40" y2="52" />
+                                    <line x1="24" y1="58" x2="40" y2="58" />
+                                </svg>
+                            </button>
                         </div>
                     </div>
 
@@ -65,7 +60,7 @@
                         
 
                         <div class="send-pause-container"></div>
-                            <button id="pausar-button" class="action-button" title="Pausar respuesta">
+                        <button id="pausar-button" class="action-button" title="Pausar respuesta">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="white">
                                 <rect x="6" y="6" width="12" height="12"/>
                                 </svg>
@@ -78,18 +73,20 @@
             </section>
         </div>
 
-        <!-- ===== PANEL DE IMAGEN ===== -->
         <div class="image-panel" id="image-panel">
             <div class="image-panel-header">
                 <button id="close-image-panel" class="close-button">&times;</button>
             </div>
-            <div class="image-display-area">
-                 <div id="myDiagramDiv" style="width:100%; height:400px;"></div>
+            
+            <div class="carousel-container">
+                <div class="image-display-area">
+                    </div>
             </div>
-            <div class="image-nav-controls" id="image-nav-controls">
-                <button id="prev-item-btn" class="nav-arrow" title="Anterior">&lt;</button>
-                <span id="item-counter"></span>
-                <button id="next-item-btn" class="nav-arrow" title="Siguiente">&gt;</button>
+            
+            <div class="carousel-nav" id="carousel-nav">
+                <button class="carousel-button prev" id="prev-button">&#10094;</button>
+                <div class="carousel-counter" id="carousel-counter"></div>
+                <button class="carousel-button next" id="next-button">&#10095;</button>
             </div>
         </div>
     </div>
