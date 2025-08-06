@@ -40,8 +40,7 @@ def ajustarRespuestaImagen(cliente: AzureOpenAI, prompt):
         "3. Contexto mínimo: ¿Qué ambiente lo apoya?\n\n"
         
         "EJEMPLOS DE SIMPLICIDAD EFECTIVA:\n"
-        "• IAG creando contenido → 'IA central emanando texto, imagen y música hacia pantallas'\n"
-        "• Educación con IA → 'Estudiantes interactuando con pantalla IA en aula moderna'\n"
+        
         "• Análisis de datos → 'gráficos flotantes coloridos y visualizaciones'\n"
         "• Evolución temporal → línea de tiempo visual\n\n"
         
