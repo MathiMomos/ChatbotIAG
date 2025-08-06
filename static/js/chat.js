@@ -108,6 +108,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const img = document.createElement('img');
             img.src = data.url;
             img.alt = `Imagen generada`;
+            img.classList.add('expandable-image')
+            img.dataset.title = 'Imagen generada';
             imageContainer.appendChild(img);
 
             carouselItems.push(imageContainer.outerHTML);
@@ -122,6 +124,33 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    function showImageModal(title, imageUrl) {
+        const modal = document.createElement("div");
+        modal.className = "chart-modal";
+
+        modal.innerHTML = `
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h3>${title}</h3>
+            <img src="${imageUrl}" alt="${title}" style="max-width: 100%; max-height: 80vh; border-radius: 10px;">
+        </div>
+    `;
+
+        document.body.appendChild(modal);
+
+        modal.querySelector(".modal-close").onclick = () => modal.remove();
+        modal.onclick = (e) => {
+            if (e.target === modal) modal.remove();
+        };
+    }
+    document.addEventListener("click", function (e) {
+        const img = e.target.closest(".expandable-image");
+        if (img) {
+            const title = img.dataset.title;
+            const src = img.src;
+            showImageModal(title, src);
+        }
+    });
     // --- LOGICA DEL GRÁFICO ESTADÍSTICO ---
     async function generateChart(messageElement) {
         if (isGeneratingContent) {
@@ -164,6 +193,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const chartContainer = document.createElement('div');
             chartContainer.className = 'generated-chart-container';
+            // Aca estaba la logica para agrandar la imagen :(
             const img = document.createElement('img');
             img.src = data.valor.imagen;
             img.alt = `Gráfico: ${data.valor.titulo || 'Estadístico'}`;

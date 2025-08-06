@@ -79,7 +79,7 @@ class FlowChatbot:
 
     #Creamos un agente de contexto
     self.agenteDeContexto = AgenteDeContexto(
-      llm = obtenerModelo(),
+      llm = obtenerModelo(temperature=0.2),
       condiciones="""
         Como mínimo debe cumplirse TODAS estas condiciones a la vez:
 
@@ -94,7 +94,7 @@ class FlowChatbot:
 
     #Creamos un agente de memoria a largo plazo
     self.agenteDeMemoriaLargoPlazo = AgenteDeMemoriaLargoPlazo(
-      llm = obtenerModelo(),
+      llm = obtenerModelo(temperature=0.2),
       condiciones = """
         - El nombre del usuario
         - La edad del usuario
@@ -147,7 +147,7 @@ También considera esta información del usuario:
 
     #Creamos el agente de analisis
     self.agenteDeAnalisis = AgenteDeAnalisis(
-      llm = obtenerModelo(),
+      llm = obtenerModelo(temperature=0.2),
       descripcion = """
         Para un texto, si hay informacion que se contradicen entre sí
         trata de darle coherencia, quedandote con la información más reciente,
@@ -167,7 +167,7 @@ También considera esta información del usuario:
     )
     
     self.agenteSupervisor = AgenteSupervisor(
-      llm = obtenerModelo()
+      llm = obtenerModelo(temperature=0)
     )
   #Implementamos los nodos
   def implementacionDeNodos(self):

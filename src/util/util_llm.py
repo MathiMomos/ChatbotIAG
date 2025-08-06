@@ -25,13 +25,14 @@ from openai import AzureOpenAI
 ## #######################################################################################################
 
 #Obtiene el modelo con el que trabajamos
-def obtenerModelo():
+def obtenerModelo(temperature: float = 0.7):
   #Conexión a un modelo
   llm = AzureChatOpenAI(
       api_version = key.require("CONF_API_VERSION"),
       azure_endpoint = key.require("CONF_AZURE_ENDPOINT"),
       openai_api_key = key.require("CONF_OPENAI_API_KEY"),
-      azure_deployment = key.require("CONF_AZURE_DEPLOYMENT")
+      azure_deployment = key.require("CONF_AZURE_DEPLOYMENT"),
+      temperature= temperature
   )
 
   return llm
