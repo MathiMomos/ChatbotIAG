@@ -10,9 +10,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const prevButton = document.getElementById('prev-button');
     const nextButton = document.getElementById('next-button');
 
-
     const carouselNav = document.getElementById('carousel-nav');
     const carouselCounter = document.getElementById('carousel-counter');
+    const inputContainer = document.querySelector('.input-container');
 
     let mediaRecorder;
     let audioChunks = [];
@@ -29,23 +29,35 @@ document.addEventListener('DOMContentLoaded', function () {
     let carouselItems = [];
     let currentIndex = 0;
 
+    function lockUserInput() {
+        userInput.disabled = true;
+        enviarButton.disabled = true;
+        micButton.disabled = true;
+        inputContainer.classList.add('input-locked');
+        userInput.placeholder = "Esperando respuesta...";
+    }
+
+    function unlockUserInput() {
+        userInput.disabled = false;
+        enviarButton.disabled = false;
+        micButton.disabled = false;
+        inputContainer.classList.remove('input-locked');
+        userInput.placeholder = "Ask anythink...";
+        userInput.focus(); // Devuelve el foco al área de texto
+    }
+
+
     function renderCarousel() {
         imageDisplayArea.innerHTML = ''; // Limpiar el área
-        
-        // Ocultar la navegación si no hay items
         carouselNav.classList.toggle('hidden', carouselItems.length === 0);
 
         if (carouselItems.length > 0) {
-            // Actualizar contador
             carouselCounter.textContent = `${currentIndex + 1} / ${carouselItems.length}`;
-
-            // Crear y mostrar el item actual
             const currentItem = document.createElement('div');
             currentItem.className = 'carousel-item active';
             currentItem.innerHTML = carouselItems[currentIndex];
             imageDisplayArea.appendChild(currentItem);
 
-            // Re-inicializar diagramas de GoJS si es necesario
             const diagramDiv = currentItem.querySelector('[id^="diagram-"]');
             if (diagramDiv && diagramDiv.dataset.diagramData) {
                 const diagramData = JSON.parse(diagramDiv.dataset.diagramData);
@@ -53,7 +65,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        // Actualizar visibilidad de los botones
         prevButton.classList.toggle('hidden', currentIndex === 0);
         nextButton.classList.toggle('hidden', currentIndex >= carouselItems.length - 1);
     }
@@ -72,50 +83,40 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-
     // --- LOGICA DEL PANEL DE IMAGEN ---
     async function generateImage(messageElement) {
         if (isGeneratingContent) {
             throw new Error("Ya se está generando una imagen.");
         }
-
         isGeneratingContent = true;
         document.body.classList.add('image-view-active');
-
         const messageText = messageElement.querySelector('div').innerText || messageElement.textContent;
-
         const loadingIndicator = document.createElement('div');
         loadingIndicator.innerHTML = `<div class="typing-indicator" style="padding: 20px; margin: auto;"><span></span><span></span><span></span></div>`;
         imageDisplayArea.innerHTML = '';
         imageDisplayArea.appendChild(loadingIndicator);
-
         try {
             const response = await fetch('/imagen', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt: messageText })
             });
-            if (!response.ok) {
-                throw new Error(`Error del servidor: ${response.status}`);
-            }
-
+            if (!response.ok) throw new Error(`Error del servidor: ${response.status}`);
             const data = await response.json();
-            if (data.error) {
-                throw new Error(data.error);
-            }
+            if (data.error) throw new Error(data.error);
+
             const imageContainer = document.createElement('div');
             imageContainer.className = 'generated-image-container';
             const img = document.createElement('img');
             img.src = data.url;
             img.alt = `Imagen generada`;
-            img.classList.add('expandable-image')
+            // Tu lógica original para expandir la imagen ya estaba aquí, la mantenemos.
+            img.classList.add('expandable-image');
             img.dataset.title = 'Imagen generada';
             imageContainer.appendChild(img);
-
             carouselItems.push(imageContainer.outerHTML);
             currentIndex = carouselItems.length - 1;
             renderCarousel();
-
         } catch (error) {
             console.error("Error al generar la imagen:", error);
             addMessage("Lo siento, no se pudo generar la imagen.", "bot");
@@ -124,42 +125,13 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function showImageModal(title, imageUrl) {
-        const modal = document.createElement("div");
-        modal.className = "chart-modal";
-
-        modal.innerHTML = `
-        <div class="modal-content">
-            <span class="modal-close">&times;</span>
-            <h3>${title}</h3>
-            <img src="${imageUrl}" alt="${title}" style="max-width: 100%; max-height: 80vh; border-radius: 10px;">
-        </div>
-    `;
-
-        document.body.appendChild(modal);
-
-        modal.querySelector(".modal-close").onclick = () => modal.remove();
-        modal.onclick = (e) => {
-            if (e.target === modal) modal.remove();
-        };
-    }
-    document.addEventListener("click", function (e) {
-        const img = e.target.closest(".expandable-image");
-        if (img) {
-            const title = img.dataset.title;
-            const src = img.src;
-            showImageModal(title, src);
-        }
-    });
     // --- LOGICA DEL GRÁFICO ESTADÍSTICO ---
     async function generateChart(messageElement) {
         if (isGeneratingContent) {
             throw new Error("Ya se está generando un gráfico.");
         }
-
         isGeneratingContent = true;
         document.body.classList.add('image-view-active');
-
         let messageText;
         if (messageElement.classList.contains('bot-message')) {
             messageText = messageElement.querySelector('div').innerText || messageElement.textContent;
@@ -168,41 +140,40 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             messageText = messageElement.querySelector('div')?.innerText || messageElement.textContent || messageElement.innerText;
         }
-
         const loadingIndicator = document.createElement('div');
         loadingIndicator.innerHTML = `<div class="typing-indicator" style="padding: 20px; margin: auto;"><span></span><span></span><span></span></div>`;
         imageDisplayArea.innerHTML = '';
         imageDisplayArea.appendChild(loadingIndicator);
-
         try {
             const response = await fetch('/chart', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt: messageText })
             });
-
-            if (!response.ok) {
-                throw new Error(`Error del servidor: ${response.status}`);
-            }
-
+            if (!response.ok) throw new Error(`Error del servidor: ${response.status}`);
             const data = await response.json();
-            
             if (data.error || (data.valor && data.valor.error) || !data.valor || !data.valor.imagen) {
                 throw new Error(data.error || (data.valor && data.valor.error) || "Los datos del gráfico no son válidos");
             }
-
             const chartContainer = document.createElement('div');
             chartContainer.className = 'generated-chart-container';
-            // Aca estaba la logica para agrandar la imagen :(
+            
+            // Se mantiene tu lógica original de creación de la imagen
             const img = document.createElement('img');
             img.src = data.valor.imagen;
-            img.alt = `Gráfico: ${data.valor.titulo || 'Estadístico'}`;
+            const title = data.valor.titulo || 'Estadístico';
+            img.alt = `Gráfico: ${title}`;
+
+            // ===> INICIO DE LA MODIFICACIÓN <===
+            // Se añaden las clases y atributos para que el modal funcione, sin cambiar nada más.
+            img.classList.add('expandable-image');
+            img.dataset.title = title;
+            // ===> FIN DE LA MODIFICACIÓN <===
+
             chartContainer.appendChild(img);
-            
             carouselItems.push(chartContainer.outerHTML);
             currentIndex = carouselItems.length - 1;
             renderCarousel();
-
         } catch (error) {
             console.error("Error al generar el gráfico:", error);
             addMessage("Lo siento, no se pudo generar el gráfico estadístico.", "bot");
@@ -216,16 +187,13 @@ document.addEventListener('DOMContentLoaded', function () {
         if (isGeneratingContent) {
             throw new Error("Ya se está generando un diagrama.");
         }
-
         if (typeof go === 'undefined') {
             console.error("GoJS no está cargado");
             addMessage("Error: GoJS no está disponible. Verifica la conexión a internet.", "bot");
             return;
         }
-
         isGeneratingContent = true;
         document.body.classList.add('image-view-active');
-        
         let messageText;
         if (messageElement.classList.contains('bot-message')) {
             messageText = messageElement.querySelector('div').innerText || messageElement.textContent;
@@ -234,25 +202,18 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             messageText = messageElement.querySelector('div')?.innerText || messageElement.textContent || messageElement.innerText;
         }
-
         const loadingIndicator = document.createElement('div');
         loadingIndicator.innerHTML = `<div class="typing-indicator" style="padding: 20px; margin: auto;"><span></span><span></span><span></span></div>`;
         imageDisplayArea.innerHTML = '';
         imageDisplayArea.appendChild(loadingIndicator);
-
         try {
             const response = await fetch('/diagram', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt: messageText })
             });
-
-            if (!response.ok) {
-                throw new Error(`Error del servidor: ${response.status}`);
-            }
-
+            if (!response.ok) throw new Error(`Error del servidor: ${response.status}`);
             const data = await response.json();
-
             if (data.error || (data.valor && data.valor.error) || !data.valor || !data.valor.nodes) {
                 throw new Error(data.error || (data.valor && data.valor.error) || "Los datos del diagrama no son válidos");
             }
@@ -260,16 +221,21 @@ document.addEventListener('DOMContentLoaded', function () {
             const diagramId = 'diagram-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9);
             const diagramContainer = document.createElement('div');
             diagramContainer.className = 'generated-diagram-container';
-            diagramContainer.innerHTML = `<div id="${diagramId}" style="width:100%; height:400px; border: 1px solid #ccc; background-color: white; border-radius: 10px;"></div>`;
+            diagramContainer.innerHTML = `<div id="${diagramId}" style="width:100%; height:400px; border: 1px solid #ccc; background-color: white; border-radius: 10px; cursor: pointer;"></div>`;
             
-            // Guardar los datos del diagrama en el elemento para su posterior re-renderizado
             const diagramDiv = diagramContainer.querySelector(`#${diagramId}`);
+            // Se mantiene tu lógica original de guardar los datos
             diagramDiv.dataset.diagramData = JSON.stringify(data.valor);
+            
+            // ===> INICIO DE LA MODIFICACIÓN <===
+            // Se añade la clase para identificar que este elemento se puede expandir
+            diagramDiv.classList.add('expandable-diagram');
+            diagramDiv.dataset.title = 'Diagrama Generado';
+            // ===> FIN DE LA MODIFICACIÓN <===
 
             carouselItems.push(diagramContainer.outerHTML);
             currentIndex = carouselItems.length - 1;
             renderCarousel();
-            
         } catch (error) {
             console.error("Error al generar el diagrama:", error);
             addMessage("Lo siento, no se pudo generar el diagrama.", "bot");
@@ -278,29 +244,87 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Función para inicializar un diagrama de GoJS
+
+    // --- LÓGICA DE MODALES (VISTA EXPANDIDA) ---
+
+    // Función que ya tenías para expandir imágenes. La reutilizaremos.
+    function showImageModal(title, imageUrl) {
+        const modal = document.createElement("div");
+        modal.className = "chart-modal";
+        modal.innerHTML = `
+        <div class="modal-content" >
+            <span class="modal-close">&times;</span>
+            <h3>${title}</h3>
+            <img src="${imageUrl}" alt="${title}" style="max-width: 100%; max-height: 80vh; border-radius: 10px;">
+        </div>`;
+        document.body.appendChild(modal);
+        addModalCloseLogic(modal);
+    }
+
+    // ===> INICIO DE CÓDIGO NUEVO <===
+    // Nueva función específica para mostrar diagramas en un modal.
+    function showDiagramModal(title, diagramData) {
+        const modal = document.createElement("div");
+        modal.className = "chart-modal";
+        const modalDiagramId = 'modal-diagram-' + Date.now();
+        
+        modal.innerHTML = `
+        <div class="modal-content" style="width: 90%; height: 90%; max-width: 1200px;">
+            <span class="modal-close">&times;</span>
+            <h3>${title}</h3>
+            <div id="${modalDiagramId}" style="width: 100%; height: calc(100% - 50px); border-radius: 10px; background-color: white;"></div>
+        </div>`;
+        
+        document.body.appendChild(modal);
+        initializeGoJSDiagram(modalDiagramId, diagramData);
+        addModalCloseLogic(modal);
+    }
+
+    function addModalCloseLogic(modal) {
+        modal.querySelector(".modal-close").onclick = () => modal.remove();
+        modal.onclick = (e) => {
+            if (e.target.classList.contains('chart-modal')) {
+                modal.remove();
+            }
+        };
+    }
+
+    document.addEventListener("click", function (e) {
+
+        const image = e.target.closest(".expandable-image");
+        if (image) {
+            const title = image.dataset.title;
+            const src = image.src;
+            showImageModal(title, src);
+            return;
+        }
+
+        const diagram = e.target.closest(".expandable-diagram");
+        if (diagram) {
+            const title = diagram.dataset.title;
+            const diagramData = JSON.parse(diagram.dataset.diagramData);
+            showDiagramModal(title, diagramData);
+            return;
+        }
+    });
+
+    // Función para inicializar un diagrama de GoJS (Tu lógica original sin cambios)
     function initializeGoJSDiagram(diagramId, diagramData) {
         const targetDiv = document.getElementById(diagramId);
         if (!targetDiv || typeof go === 'undefined') return;
-
-        // Limpiar cualquier diagrama previo
         if (targetDiv.diagram) {
             targetDiv.diagram.div = null;
         }
-
         const $ = go.GraphObject.make;
         const myDiagram = new go.Diagram(diagramId);
         myDiagram.initialContentAlignment = go.Spot.Center;
         myDiagram.undoManager.isEnabled = true;
-        
         let hasParentProperty = diagramData.nodes && diagramData.nodes.some(node => node.parent);
-        
         if (hasParentProperty) {
             myDiagram.layout = $(go.TreeLayout, { angle: 90, layerSpacing: 80 });
         } else {
             myDiagram.layout = $(go.LayeredDigraphLayout, { direction: 90, layerSpacing: 60 });
         }
-
         myDiagram.nodeTemplate =
             $(go.Node, "Auto",
                 $(go.Shape, "RoundedRectangle", { strokeWidth: 2, stroke: "#333", fill: "white" },
@@ -308,13 +332,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 $(go.TextBlock, { margin: 12, font: "bold 13px sans-serif", stroke: "#000" },
                     new go.Binding("text", "text"))
             );
-
         myDiagram.linkTemplate =
             $(go.Link, { routing: go.Link.Orthogonal, corner: 8 },
                 $(go.Shape, { strokeWidth: 2, stroke: "#666" }),
                 $(go.Shape, { toArrow: "Standard", fill: "#666", stroke: "#666" })
             );
-
         if (hasParentProperty) {
             myDiagram.model = new go.TreeModel(diagramData.nodes || []);
         } else {
@@ -508,6 +530,9 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         showThinkingIndicator();
+
+        lockUserInput();
+
         const arrayBuffer = await audioBlob.arrayBuffer();
         const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
@@ -605,6 +630,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         globalMessages.appendChild(messageDiv);
         scrollToBottom();
+
+        unlockUserInput();
     }
 
     function sendMessage() {
@@ -614,6 +641,8 @@ document.addEventListener('DOMContentLoaded', function () {
             userInput.value = '';
             adjustTextareaHeight();
             showThinkingIndicator();
+
+            lockUserInput();
 
             fetch('/chat', {
                 method: 'POST',
