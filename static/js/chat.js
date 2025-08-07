@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let audioStream;
     let typeWriterTimeout;
     let stopTypingRequested = false;
-
+    let currentAudio = null;
     let audioPlayerId = 0;
     let usarBaseConocimiento = true;
     let isGeneratingContent = false;
@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             const chartContainer = document.createElement('div');
             chartContainer.className = 'generated-chart-container';
-            
+
             // Se mantiene tu lógica original de creación de la imagen
             const img = document.createElement('img');
             img.src = data.valor.imagen;
@@ -217,16 +217,16 @@ document.addEventListener('DOMContentLoaded', function () {
             if (data.error || (data.valor && data.valor.error) || !data.valor || !data.valor.nodes) {
                 throw new Error(data.error || (data.valor && data.valor.error) || "Los datos del diagrama no son válidos");
             }
-            
+
             const diagramId = 'diagram-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9);
             const diagramContainer = document.createElement('div');
             diagramContainer.className = 'generated-diagram-container';
             diagramContainer.innerHTML = `<div id="${diagramId}" style="width:100%; height:400px; border: 1px solid #ccc; background-color: white; border-radius: 10px; cursor: pointer;"></div>`;
-            
+
             const diagramDiv = diagramContainer.querySelector(`#${diagramId}`);
             // Se mantiene tu lógica original de guardar los datos
             diagramDiv.dataset.diagramData = JSON.stringify(data.valor);
-            
+
             // ===> INICIO DE LA MODIFICACIÓN <===
             // Se añade la clase para identificar que este elemento se puede expandir
             diagramDiv.classList.add('expandable-diagram');
@@ -267,14 +267,14 @@ document.addEventListener('DOMContentLoaded', function () {
         const modal = document.createElement("div");
         modal.className = "chart-modal";
         const modalDiagramId = 'modal-diagram-' + Date.now();
-        
+
         modal.innerHTML = `
         <div class="modal-content" style="width: 90%; height: 90%; max-width: 1200px;">
             <span class="modal-close">&times;</span>
             <h3>${title}</h3>
             <div id="${modalDiagramId}" style="width: 100%; height: calc(100% - 50px); border-radius: 10px; background-color: white;"></div>
         </div>`;
-        
+
         document.body.appendChild(modal);
         initializeGoJSDiagram(modalDiagramId, diagramData);
         addModalCloseLogic(modal);
@@ -348,7 +348,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // IMAGEN
         const imageButton = event.target.closest('.generate-image-button');
         if (imageButton) {
-            const messageElement = event.target.closest('.bot-message');
+            const messageElement = event.target.closest('.bot-message, .user-message');
             if (messageElement) {
                 generateImage(messageElement);
             }
@@ -374,8 +374,20 @@ document.addEventListener('DOMContentLoaded', function () {
         const audioButton = event.target.closest('.generate-audio-button');
         if (audioButton) {
             const messageElement = event.target.closest('.bot-message, .user-message');
-            if (messageElement) {
-                generateAudio(messageElement);
+            const currentState = audioButton.dataset.state;
+
+            if (currentState === "playing" && currentAudio) {
+                currentAudio.pause();
+                audioButton.dataset.state = "paused";
+                // Cambiar icono a "play"
+                restorePlayIcon(audioButton);
+            } else if (currentState === "paused" && currentAudio) {
+                currentAudio.play();
+                audioButton.dataset.state = "playing";
+                // Cambiar icono a "pause"
+                audioButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M6 4h4v16H6zm8 0h4v16h-4z"/></svg>`;
+            } else if (currentState === "idle") {
+                generateAudio(messageElement, audioButton);
             }
         }
     });
@@ -569,7 +581,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
-    async function generateAudio(messageElement) {
+    async function generateAudio(messageElement, audioButton) {
         const text = messageElement.innerText;
 
         try {
@@ -584,14 +596,39 @@ document.addEventListener('DOMContentLoaded', function () {
             const data = await response.json();
 
             if (response.ok && data.valor) {
+                if (currentAudio) {
+
+                    currentAudio.pause();
+                    currentAudio = null;
+                }
+
                 const audio = new Audio("data:audio/wav;base64," + data.valor);
+                currentAudio = audio;
+                audioButton.dataset.state = "playing";
+                audioButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M6 4h4v16H6zm8 0h4v16h-4z"/></svg>`;
+
                 audio.play();
+
+                audio.onended = () => {
+                    currentAudio = null;
+                    audioButton.dataset.state = "idle";
+                    restorePlayIcon(audioButton);
+                };
             } else {
                 console.error("Error en síntesis de audio:", data.error);
             }
         } catch (error) {
             console.error("Error en fetch de audio:", error);
         }
+    }
+
+    function restorePlayIcon(button) {
+        button.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16" fill="currentColor"> 
+            <path d="M11.536 14.01A8.47 8.47 0 0 0 14.026 8a8.47 8.47 0 0 0-2.49-6.01l-.708.707A7.48 7.48 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303z"/>
+            <path d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596l-.707.707A5.48 5.48 0 0 1 11.025 8a5.48 5.48 0 0 1-1.61 3.89z"/>
+            <path d="M10.025 8a4.5 4.5 0 0 1-1.318 3.182L8 10.475A3.5 3.5 0 0 0 9.025 8c0-.966-.392-1.841-1.025-2.475l.707-.707A4.5 4.5 0 0 1 10.025 8M7 4a.5.5 0 0 0-.812-.39L3.825 5.5H1.5A.5.5 0 0 0 1 6v4a.5.5 0 0 0 .5.5h2.325l2.363 1.89A.5.5 0 0 0 7 12zM4.312 6.39 6 5.04v5.92L4.312 9.61A.5.5 0 0 0 4 9.5H2v-3h2a.5.5 0 0 0 .312-.11"/>
+        </svg>`;
     }
 
     function stopRecording() {
@@ -660,7 +697,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M22 21H2V3h2v16h2v-9h4v9h2V6h4v13h2v-5h4z"/></svg>
             </button>
 
-            <button class="bot-action-button generate-audio-button" title="Generar Audio">
+            <button class="bot-action-button generate-audio-button" title="Generar Audio" data-state="idle">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16" fill="currentColor"> <path  d="M11.536 14.01A8.47 8.47 0 0 0 14.026 8a8.47 8.47 0 0 0-2.49-6.01l-.708.707A7.48 7.48 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303z"/>
                 <path d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596l-.707.707A5.48 5.48 0 0 1 11.025 8a5.48 5.48 0 0 1-1.61 3.89z"/>
                 <path d="M10.025 8a4.5 4.5 0 0 1-1.318 3.182L8 10.475A3.5 3.5 0 0 0 9.025 8c0-.966-.392-1.841-1.025-2.475l.707-.707A4.5 4.5 0 0 1 10.025 8M7 4a.5.5 0 0 0-.812-.39L3.825 5.5H1.5A.5.5 0 0 0 1 6v4a.5.5 0 0 0 .5.5h2.325l2.363 1.89A.5.5 0 0 0 7 12zM4.312 6.39 6 5.04v5.92L4.312 9.61A.5.5 0 0 0 4 9.5H2v-3h2a.5.5 0 0 0 .312-.11"/>
@@ -715,7 +752,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', `${sender}-message`);
         messageDiv.textContent = text;
-        
+
         globalMessages.appendChild(messageDiv);
         scrollToBottom();
     }
