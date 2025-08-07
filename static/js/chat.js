@@ -369,6 +369,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 generateChart(messageElement);
             }
         }
+
+        // AUDIO
+        const audioButton = event.target.closest('.generate-audio-button');
+        if (audioButton) {
+            const messageElement = event.target.closest('.bot-message, .user-message');
+            if (messageElement) {
+                generateAudio(messageElement);
+            }
+        }
     });
 
     enviarButton.addEventListener('click', sendMessage);
@@ -560,6 +569,31 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
+    async function generateAudio(messageElement) {
+        const text = messageElement.innerText;
+
+        try {
+            const response = await fetch("/audio", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ prompt: text })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.valor) {
+                const audio = new Audio("data:audio/wav;base64," + data.valor);
+                audio.play();
+            } else {
+                console.error("Error en síntesis de audio:", data.error);
+            }
+        } catch (error) {
+            console.error("Error en fetch de audio:", error);
+        }
+    }
+
     function stopRecording() {
         if (mediaRecorder && isRecording) {
             mediaRecorder.stop();
@@ -624,6 +658,13 @@ document.addEventListener('DOMContentLoaded', function () {
             </button>
             <button class="bot-action-button generate-chart-button" title="Generar Estadistica">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M22 21H2V3h2v16h2v-9h4v9h2V6h4v13h2v-5h4z"/></svg>
+            </button>
+
+            <button class="bot-action-button generate-audio-button" title="Generar Audio">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16" fill="currentColor"> <path  d="M11.536 14.01A8.47 8.47 0 0 0 14.026 8a8.47 8.47 0 0 0-2.49-6.01l-.708.707A7.48 7.48 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303z"/>
+                <path d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596l-.707.707A5.48 5.48 0 0 1 11.025 8a5.48 5.48 0 0 1-1.61 3.89z"/>
+                <path d="M10.025 8a4.5 4.5 0 0 1-1.318 3.182L8 10.475A3.5 3.5 0 0 0 9.025 8c0-.966-.392-1.841-1.025-2.475l.707-.707A4.5 4.5 0 0 1 10.025 8M7 4a.5.5 0 0 0-.812-.39L3.825 5.5H1.5A.5.5 0 0 0 1 6v4a.5.5 0 0 0 .5.5h2.325l2.363 1.89A.5.5 0 0 0 7 12zM4.312 6.39 6 5.04v5.92L4.312 9.61A.5.5 0 0 0 4 9.5H2v-3h2a.5.5 0 0 0 .312-.11"/>
+                </svg>
             </button>
         `;
         messageDiv.appendChild(actionsDiv);
