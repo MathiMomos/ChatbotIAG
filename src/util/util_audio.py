@@ -1,9 +1,14 @@
 import base64
 import tempfile
 import src.util.util_env as key
-from azure.cognitiveservices.speech import SpeechConfig, SpeechRecognizer, AudioConfig, AutoDetectSourceLanguageConfig
+from azure.cognitiveservices.speech import SpeechConfig, SpeechRecognizer, AudioConfig, AutoDetectSourceLanguageConfig, SpeechSynthesizer, ResultReason
+from azure.cognitiveservices.speech.audio import AudioOutputConfig, PullAudioOutputStream
 import os
 import subprocess
+
+def obtenerModeloVoz():
+    speechConfig: SpeechConfig = SpeechConfig(subscription=key.require("CONF_AZURE_SPEECH_KEY"), region=key.require("CONF_AZURE_SPEECH_REGION"))
+    return speechConfig
 
 def detectar_formato_audio(audio_bytes):
     if audio_bytes.startswith(b'OggS'):
@@ -49,15 +54,12 @@ def transcribir_audio_base64_a_texto(audio_base64):
     with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_audio:
         temp_audio.write(audio_bytes)
         temp_audio.flush()
-        audio_file_path = temp_audio.name
+        audio_file_path: str = temp_audio.name
 
-    AZURE_SPEECH_KEY = key.require("CONF_AZURE_SPEECH_KEY")
-    AZURE_SPEECH_REGION = key.require("CONF_AZURE_SPEECH_REGION")
-
-    speech_config = SpeechConfig(subscription=AZURE_SPEECH_KEY, region=AZURE_SPEECH_REGION)
-    auto_detect_source_language_config = AutoDetectSourceLanguageConfig(languages=["es-ES", "en-US", "pt-BR"])
-    audio_config = AudioConfig(filename=audio_file_path)
-    speech_recognizer = SpeechRecognizer(speech_config=speech_config, audio_config=audio_config, auto_detect_source_language_config=auto_detect_source_language_config)
+    speech_config: SpeechConfig = obtenerModeloVoz()
+    language_config: AutoDetectSourceLanguageConfig = AutoDetectSourceLanguageConfig(languages=["es-ES", "en-US", "pt-BR"])
+    audio_config: AudioConfig = AudioConfig(filename=audio_file_path)
+    speech_recognizer: SpeechRecognizer = SpeechRecognizer(speech_config=speech_config, audio_config=audio_config, auto_detect_source_language_config=language_config)
 
     resultado = speech_recognizer.recognize_once()
 
@@ -65,3 +67,23 @@ def transcribir_audio_base64_a_texto(audio_base64):
         return resultado.text
     else:
         return "No se pudo transcribir el audio con Azure."
+
+def texto_a_voz(prompt):
+    speech_config: SpeechConfig = obtenerModeloVoz()
+    speech_config.speech_synthesis_voice_name = "es-ES-AlvaroNeural" ## Cambia la voz aquí si lo deseas
+    audio_output_stream = PullAudioOutputStream()
+    audio_config = AudioOutputConfig(stream=audio_output_stream)
+    speech_sintetizer: SpeechSynthesizer = SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
+    resultado = speech_sintetizer.speak_text_async(prompt).get()
+
+    if resultado == None:
+        print("No se pudo sintetizar el texto.")
+        return None
+
+    if resultado.reason == ResultReason.SynthesizingAudioCompleted:
+        print("¡Síntesis completada con éxito!")
+    else:
+        print(f"Ocurrió un error: {resultado.reason}")
+    
+    audioEncode = base64.b64encode(resultado.audio_data).decode("utf-8")
+    return audioEncode

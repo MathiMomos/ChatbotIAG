@@ -1,4 +1,3 @@
-from src.flow.FlowChatbot import FlowChatbot
 import os
 
 from flask import Flask, render_template, request, jsonify
@@ -14,6 +13,7 @@ from src.util import util_charts
 from src.util import util_images as ui
 from flask import session
 from langgraph.checkpoint.memory import InMemorySaver
+from langchain_core.runnables.config import RunnableConfig
 import uuid
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -57,7 +57,7 @@ def chat():
     print("FLASK ENVIA AL FLUJO:", promptUsuario)
 
     # 3. Ejecuta el flujo y devuelve la respuesta
-    config = {"configurable": {"thread_id": session["thread_id"]}}
+    config: RunnableConfig = {"configurable": {"thread_id": session["thread_id"]}}
     respuestaModelo = chatbot.ejecutar(prompt=promptUsuario, base=usarBase, config=config)
     state = chatbot.grafo.get_state(config)
     print("DEBUG ▶︎ Salida del grafo:", respuestaModelo)
@@ -122,6 +122,24 @@ def chart():
         print(f"Error en endpoint chart: {e}")
         return jsonify({"error": f"Error interno del servidor: {str(e)}"}), 500
 
+@app.route("/audio", methods=["POST"])
+def audio():
+    try:
+        datos = request.get_json()
+        prompt = datos.get("prompt")
+        
+        if not prompt:
+            return jsonify({"error": "No se proporcionó un prompt"}), 400
+            
+        audio_base64 = ua.texto_a_voz(prompt)
+        
+        if audio_base64 is None:
+            return jsonify({"error": "No se pudo sintetizar el texto a voz"}), 500
+        
+        return jsonify({"contenido": "audio", "valor": audio_base64})
+    except Exception as e:
+        print(f"Error en endpoint audio: {e}")
+        return jsonify({"error": f"Error interno del servidor: {str(e)}"}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
