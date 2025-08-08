@@ -43,12 +43,12 @@ document.addEventListener('DOMContentLoaded', function () {
         micButton.disabled = false;
         inputContainer.classList.remove('input-locked');
         userInput.placeholder = "Ask anythink...";
-        userInput.focus(); // Devuelve el foco al área de texto
+        userInput.focus();
     }
 
 
     function renderCarousel() {
-        imageDisplayArea.innerHTML = ''; // Limpiar el área
+        imageDisplayArea.innerHTML = '';
         carouselNav.classList.toggle('hidden', carouselItems.length === 0);
 
         if (carouselItems.length > 0) {
@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         isGeneratingContent = true;
         document.body.classList.add('image-view-active');
-        const messageText = messageElement.querySelector('div').innerText || messageElement.textContent;
+        const messageText = messageElement.querySelector('.main-content').innerText || messageElement.textContent; // <<<<<<
         const loadingIndicator = document.createElement('div');
         loadingIndicator.innerHTML = `<div class="typing-indicator" style="padding: 20px; margin: auto;"><span></span><span></span><span></span></div>`;
         imageDisplayArea.innerHTML = '';
@@ -110,7 +110,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const img = document.createElement('img');
             img.src = data.url;
             img.alt = `Imagen generada`;
-            // Tu lógica original para expandir la imagen ya estaba aquí, la mantenemos.
             img.classList.add('expandable-image');
             img.dataset.title = 'Imagen generada';
             imageContainer.appendChild(img);
@@ -132,14 +131,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         isGeneratingContent = true;
         document.body.classList.add('image-view-active');
-        let messageText;
-        if (messageElement.classList.contains('bot-message')) {
-            messageText = messageElement.querySelector('div').innerText || messageElement.textContent;
-        } else if (messageElement.classList.contains('user-message')) {
-            messageText = messageElement.textContent || messageElement.innerText;
-        } else {
-            messageText = messageElement.querySelector('div')?.innerText || messageElement.textContent || messageElement.innerText;
-        }
+        let messageText = messageElement.querySelector('.main-content').innerText || messageElement.textContent; // <<<<<<
         const loadingIndicator = document.createElement('div');
         loadingIndicator.innerHTML = `<div class="typing-indicator" style="padding: 20px; margin: auto;"><span></span><span></span><span></span></div>`;
         imageDisplayArea.innerHTML = '';
@@ -158,17 +150,12 @@ document.addEventListener('DOMContentLoaded', function () {
             const chartContainer = document.createElement('div');
             chartContainer.className = 'generated-chart-container';
 
-            // Se mantiene tu lógica original de creación de la imagen
             const img = document.createElement('img');
             img.src = data.valor.imagen;
             const title = data.valor.titulo || 'Estadístico';
             img.alt = `Gráfico: ${title}`;
-
-            // ===> INICIO DE LA MODIFICACIÓN <===
-            // Se añaden las clases y atributos para que el modal funcione, sin cambiar nada más.
             img.classList.add('expandable-image');
             img.dataset.title = title;
-            // ===> FIN DE LA MODIFICACIÓN <===
 
             chartContainer.appendChild(img);
             carouselItems.push(chartContainer.outerHTML);
@@ -194,14 +181,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         isGeneratingContent = true;
         document.body.classList.add('image-view-active');
-        let messageText;
-        if (messageElement.classList.contains('bot-message')) {
-            messageText = messageElement.querySelector('div').innerText || messageElement.textContent;
-        } else if (messageElement.classList.contains('user-message')) {
-            messageText = messageElement.textContent || messageElement.innerText;
-        } else {
-            messageText = messageElement.querySelector('div')?.innerText || messageElement.textContent || messageElement.innerText;
-        }
+        let messageText = messageElement.querySelector('.main-content').innerText || messageElement.textContent; // <<<<<<
         const loadingIndicator = document.createElement('div');
         loadingIndicator.innerHTML = `<div class="typing-indicator" style="padding: 20px; margin: auto;"><span></span><span></span><span></span></div>`;
         imageDisplayArea.innerHTML = '';
@@ -224,14 +204,9 @@ document.addEventListener('DOMContentLoaded', function () {
             diagramContainer.innerHTML = `<div id="${diagramId}" style="width:100%; height:400px; border: 1px solid #ccc; background-color: white; border-radius: 10px; cursor: pointer;"></div>`;
 
             const diagramDiv = diagramContainer.querySelector(`#${diagramId}`);
-            // Se mantiene tu lógica original de guardar los datos
             diagramDiv.dataset.diagramData = JSON.stringify(data.valor);
-
-            // ===> INICIO DE LA MODIFICACIÓN <===
-            // Se añade la clase para identificar que este elemento se puede expandir
             diagramDiv.classList.add('expandable-diagram');
             diagramDiv.dataset.title = 'Diagrama Generado';
-            // ===> FIN DE LA MODIFICACIÓN <===
 
             carouselItems.push(diagramContainer.outerHTML);
             currentIndex = carouselItems.length - 1;
@@ -246,8 +221,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     // --- LÓGICA DE MODALES (VISTA EXPANDIDA) ---
-
-    // Función que ya tenías para expandir imágenes. La reutilizaremos.
     function showImageModal(title, imageUrl) {
         const modal = document.createElement("div");
         modal.className = "chart-modal";
@@ -261,8 +234,6 @@ document.addEventListener('DOMContentLoaded', function () {
         addModalCloseLogic(modal);
     }
 
-    // ===> INICIO DE CÓDIGO NUEVO <===
-    // Nueva función específica para mostrar diagramas en un modal.
     function showDiagramModal(title, diagramData) {
         const modal = document.createElement("div");
         modal.className = "chart-modal";
@@ -280,55 +251,44 @@ document.addEventListener('DOMContentLoaded', function () {
         addModalCloseLogic(modal);
     }
 
+    let modalAbierto = false;
+
+    document.addEventListener("click", function (e) {
+        if (window.innerWidth <= 768) return;
+
+        const image = e.target.closest(".expandable-image");
+        if (image && !modalAbierto) {
+            modalAbierto = true;
+            const title = image.dataset.title;
+            const src = image.src;
+            showImageModal(title, src);
+            return;
+        }
+
+        const diagram = e.target.closest(".expandable-diagram");
+        if (diagram && !modalAbierto) {
+            modalAbierto = true;
+            const title = diagram.dataset.title;
+            const diagramData = JSON.parse(diagram.dataset.diagramData);
+            showDiagramModal(title, diagramData);
+            return;
+        }
+    });
+
+
     function addModalCloseLogic(modal) {
-        modal.querySelector(".modal-close").onclick = () => modal.remove();
+        modal.querySelector(".modal-close").onclick = () => {
+            modal.remove();
+            modalAbierto = false;
+        };
         modal.onclick = (e) => {
             if (e.target.classList.contains('chart-modal')) {
                 modal.remove();
+                modalAbierto = false;
             }
         };
     }
 
-    let modalAbierto = false;
-
-document.addEventListener("click", function (e) {
-    if (window.innerWidth <= 768) return;
-
-    const image = e.target.closest(".expandable-image");
-    if (image && !modalAbierto) {
-        modalAbierto = true;
-        const title = image.dataset.title;
-        const src = image.src;
-        showImageModal(title, src);
-        return;
-    }
-
-    const diagram = e.target.closest(".expandable-diagram");
-    if (diagram && !modalAbierto) {
-        modalAbierto = true;
-        const title = diagram.dataset.title;
-        const diagramData = JSON.parse(diagram.dataset.diagramData);
-        showDiagramModal(title, diagramData);
-        return;
-    }
-});
-
-
-function addModalCloseLogic(modal) {
-    modal.querySelector(".modal-close").onclick = () => {
-        modal.remove();
-        modalAbierto = false;
-    };
-    modal.onclick = (e) => {
-        if (e.target.classList.contains('chart-modal')) {
-            modal.remove();
-            modalAbierto = false;
-        }
-    };
-}
-
-
-    // Función para inicializar un diagrama de GoJS (Tu lógica original sin cambios)
     function initializeGoJSDiagram(diagramId, diagramData) {
         const targetDiv = document.getElementById(diagramId);
         if (!targetDiv || typeof go === 'undefined') return;
@@ -372,19 +332,16 @@ function addModalCloseLogic(modal) {
             const mainContent = messageElement.querySelector('.main-content');
             const briefContent = messageElement.querySelector('.brief-content');
 
-            // Si el contenedor del brief no existe, no hacemos nada.
             if (!briefContent) return;
 
             briefButton.classList.toggle('is-expanded');
 
             if (briefButton.classList.contains('is-expanded')) {
-                // Estado EXPANDIDO: Muestra el brief, oculta la respuesta principal.
                 mainContent.style.display = 'none';
                 briefContent.style.display = 'block';
                 briefButton.title = 'Ver menos';
                 briefButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M5 11v2h14v-2z"/></svg>`;
             } else {
-                // Estado CONTRAÍDO: Muestra la respuesta principal, oculta el brief.
                 mainContent.style.display = 'block';
                 briefContent.style.display = 'none';
                 briefButton.title = 'Ver más';
@@ -395,7 +352,7 @@ function addModalCloseLogic(modal) {
         // IMAGEN
         const imageButton = event.target.closest('.generate-image-button');
         if (imageButton) {
-            const messageElement = event.target.closest('.bot-message, .user-message');
+            const messageElement = event.target.closest('.bot-message');
             if (messageElement) {
                 generateImage(messageElement);
             }
@@ -403,7 +360,7 @@ function addModalCloseLogic(modal) {
         // DIAGRAMA
         const diagramButton = event.target.closest('.generate-diagram-button');
         if (diagramButton) {
-            const messageElement = event.target.closest('.bot-message, .user-message');
+            const messageElement = event.target.closest('.bot-message');
             if (messageElement) {
                 generateDiagram(messageElement);
             }
@@ -411,7 +368,7 @@ function addModalCloseLogic(modal) {
         // ESTADISTICA
         const chartButton = event.target.closest('.generate-chart-button');
         if (chartButton) {
-            const messageElement = event.target.closest('.bot-message, .user-message');
+            const messageElement = event.target.closest('.bot-message');
             if (messageElement) {
                 generateChart(messageElement);
             }
@@ -420,18 +377,16 @@ function addModalCloseLogic(modal) {
         // AUDIO
         const audioButton = event.target.closest('.generate-audio-button');
         if (audioButton) {
-            const messageElement = event.target.closest('.bot-message, .user-message');
+            const messageElement = event.target.closest('.bot-message');
             const currentState = audioButton.dataset.state;
 
             if (currentState === "playing" && currentAudio) {
                 currentAudio.pause();
                 audioButton.dataset.state = "paused";
-                // Cambiar icono a "play"
                 restorePlayIcon(audioButton);
             } else if (currentState === "paused" && currentAudio) {
                 currentAudio.play();
                 audioButton.dataset.state = "playing";
-                // Cambiar icono a "pause"
                 audioButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M6 4h4v16H6zm8 0h4v16h-4z"/></svg>`;
             } else if (currentState === "idle") {
                 generateAudio(messageElement, audioButton);
@@ -453,7 +408,6 @@ function addModalCloseLogic(modal) {
         console.log("Usar base de conocimiento:", usarBaseConocimiento);
     });
 
-    // Modificado para solo ocultar el panel
     closeImagePanelButton.addEventListener('click', () => {
         document.body.classList.remove('image-view-active');
     });
@@ -598,7 +552,6 @@ function addModalCloseLogic(modal) {
         });
 
         showThinkingIndicator();
-
         lockUserInput();
 
         const arrayBuffer = await audioBlob.arrayBuffer();
@@ -619,17 +572,17 @@ function addModalCloseLogic(modal) {
             .then(resp => resp.json())
             .then(data => {
                 hideThinkingIndicator();
-                renderBotResponse(data);
+                renderBotResponse(data); // <<<<<<
             })
             .catch(err => {
                 console.error(err);
                 hideThinkingIndicator();
-                renderBotResponse('Lo siento, algo salió mal al procesar tu audio.');
+                renderBotResponse({ respuesta: 'Lo siento, algo salió mal al procesar tu audio.' }); // <<<<<<
             });
     }
 
     async function generateAudio(messageElement, audioButton) {
-        const text = messageElement.innerText;
+        const text = messageElement.querySelector('.main-content').innerText; // <<<<<<
 
         try {
             const response = await fetch("/audio", {
@@ -644,7 +597,6 @@ function addModalCloseLogic(modal) {
 
             if (response.ok && data.valor) {
                 if (currentAudio) {
-
                     currentAudio.pause();
                     currentAudio = null;
                 }
@@ -721,26 +673,24 @@ function addModalCloseLogic(modal) {
         }
     }
 
-    function renderBotResponse(markdownText) {
+    // <<<<<< INICIO DEL BLOQUE COMPLETAMENTE REEMPLAZADO
+    function renderBotResponse(data) {
         stopTypingRequested = false;
 
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', 'bot-message');
 
-        // Contenedor para el contenido principal del mensaje
         const contentDiv = document.createElement('div');
 
-        // Texto principal (visible por defecto)
         const mainResponseDiv = document.createElement('div');
-        mainResponseDiv.className = 'main-content'; // Clase para identificarlo
+        mainResponseDiv.className = 'main-content';
         mainResponseDiv.innerHTML = marked.parse(data.respuesta || "No se recibió respuesta.");
         contentDiv.appendChild(mainResponseDiv);
 
-        // Texto del brief (oculto por defecto, si existe)
         if (data.brief) {
             const briefDiv = document.createElement('div');
-            briefDiv.className = 'brief-content'; // Clase para identificarlo
-            briefDiv.style.display = 'none'; // Oculto al inicio
+            briefDiv.className = 'brief-content';
+            briefDiv.style.display = 'none';
             briefDiv.innerHTML = marked.parse(data.brief);
             contentDiv.appendChild(briefDiv);
         }
@@ -749,10 +699,14 @@ function addModalCloseLogic(modal) {
 
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'bot-actions';
-        actionsDiv.innerHTML = `
+        const briefButtonHTML = data.brief ? `
             <button class="bot-action-button brief-button" title="Ver más">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M11 19v-6H5v-2h6V5h2v6h6v2h-6v6z"/></svg>
             </button>
+        ` : '';
+
+        actionsDiv.innerHTML = `
+            ${briefButtonHTML}
             <button class="bot-action-button generate-image-button" title="Generar Imagen">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M5 21q-.825 0-1.412-.587T3 19V5q0-.825.588-1.412T5 3h14q.825 0 1.413.588T21 5v14q0 .825-.587 1.413T19 21zm0-2h14V5H5zm1-2h12l-3.75-5l-3 4L9 13zm-1 2V5z"/></svg>
             </button>
@@ -762,7 +716,6 @@ function addModalCloseLogic(modal) {
             <button class="bot-action-button generate-chart-button" title="Generar Estadistica">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M22 21H2V3h2v16h2v-9h4v9h2V6h4v13h2v-5h4z"/></svg>
             </button>
-
             <button class="bot-action-button generate-audio-button" title="Generar Audio" data-state="idle">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16" fill="currentColor"> <path  d="M11.536 14.01A8.47 8.47 0 0 0 14.026 8a8.47 8.47 0 0 0-2.49-6.01l-.708.707A7.48 7.48 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303z"/>
                 <path d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596l-.707.707A5.48 5.48 0 0 1 11.025 8a5.48 5.48 0 0 1-1.61 3.89z"/>
@@ -774,9 +727,9 @@ function addModalCloseLogic(modal) {
 
         globalMessages.appendChild(messageDiv);
         scrollToBottom();
-
         unlockUserInput();
     }
+    // <<<<<< FIN DEL BLOQUE COMPLETAMENTE REEMPLAZADO
 
     function sendMessage() {
         const text = userInput.value.trim();
@@ -804,12 +757,12 @@ function addModalCloseLogic(modal) {
                 .then(response => response.json())
                 .then(data => {
                     hideThinkingIndicator();
-                    renderBotResponse(data);
+                    renderBotResponse(data); // <<<<<<
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     hideThinkingIndicator();
-                    renderBotResponse('Lo siento, algo salió mal.');
+                    renderBotResponse({ respuesta: 'Lo siento, algo salió mal.' }); // <<<<<<
                 });
         }
     }
