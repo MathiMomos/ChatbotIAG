@@ -289,24 +289,44 @@ document.addEventListener('DOMContentLoaded', function () {
         };
     }
 
-    document.addEventListener("click", function (e) {
+    let modalAbierto = false;
 
-        const image = e.target.closest(".expandable-image");
-        if (image) {
-            const title = image.dataset.title;
-            const src = image.src;
-            showImageModal(title, src);
-            return;
-        }
+document.addEventListener("click", function (e) {
+    if (window.innerWidth <= 768) return;
 
-        const diagram = e.target.closest(".expandable-diagram");
-        if (diagram) {
-            const title = diagram.dataset.title;
-            const diagramData = JSON.parse(diagram.dataset.diagramData);
-            showDiagramModal(title, diagramData);
-            return;
+    const image = e.target.closest(".expandable-image");
+    if (image && !modalAbierto) {
+        modalAbierto = true;
+        const title = image.dataset.title;
+        const src = image.src;
+        showImageModal(title, src);
+        return;
+    }
+
+    const diagram = e.target.closest(".expandable-diagram");
+    if (diagram && !modalAbierto) {
+        modalAbierto = true;
+        const title = diagram.dataset.title;
+        const diagramData = JSON.parse(diagram.dataset.diagramData);
+        showDiagramModal(title, diagramData);
+        return;
+    }
+});
+
+
+function addModalCloseLogic(modal) {
+    modal.querySelector(".modal-close").onclick = () => {
+        modal.remove();
+        modalAbierto = false;
+    };
+    modal.onclick = (e) => {
+        if (e.target.classList.contains('chart-modal')) {
+            modal.remove();
+            modalAbierto = false;
         }
-    });
+    };
+}
+
 
     // Función para inicializar un diagrama de GoJS (Tu lógica original sin cambios)
     function initializeGoJSDiagram(diagramId, diagramData) {

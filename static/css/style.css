@@ -597,92 +597,61 @@ h1 {
     display: none;
 }
 
-/* Para tablets 1024px*/
-@media (max-width: 1024px) {
-    body {
-        padding: 0;
-    }
-
-    .main-container {
-        height: 100vh;
-        max-height: none;
-        width: 100%;
-        border-radius: 0;
-    }
-    
-    body.image-view-active .main-container {
-        max-width: 100%;
-    }
-
-    .chat-container {
-        width: 100% !important;
-        height: 100%;
-        border-radius: 0;
-    }
-    
-    .chat {
-        border-radius: 0;
-    }
-    
+/*-- TABLETS --*/
+@media (min-width: 769px) and (max-width: 1024px) {
+    /* Por defecto, panel oculto */
     .image-panel {
-        position: fixed;
-        top: 0;
-        left: 0;
-        z-index: 1000;
-        border-radius: 0;
-        transition: transform 0.4s ease-in-out, width 0s, padding 0s;
-        transform: translateY(100%);
-        width: 100%;
-        height: 100%;
-        padding: 20px;
+        width: 0;
+        padding: 0;
         border-width: 0;
+        overflow: hidden;
+        transition: width 0.5s ease-in-out, padding 0.5s ease-in-out;
     }
 
     body.image-view-active .image-panel {
-        transform: translateY(0);
-        width: 100%;
+        width: 40%;
         padding: 20px;
+        border-width: 1px;
+        position: relative;
+    }
+
+    .chat-container {
+        width: 100%;
+        transition: width 0.5s ease-in-out;
+    }
+    body.image-view-active .chat-container {
+        width: 60%;
     }
 }
 
-
-/* Para Móviles (hasta 768px) */
+/* --- MÓVILES --- */
 @media (max-width: 768px) {
-    .header h1 {
-        font-size: clamp(1rem, 4vw, 1.2rem);
-        margin-right: 0;
-    }
-    
-    .chat {
-        padding: 15px;
-        gap: 15px;
+    .image-panel {
+        display: none;
     }
 
-    .global-messages {
-        padding: 0 5px;
-    }
-    
-    .input-container {
-        padding: 10px;
-        gap: 8px;
-        width: 95%;
-        margin: 0 auto 10px auto;
-    }
-    
-    .input-container textarea {
-        font-size: 16px;
-    }
-    
-    .action-button {
-        width: 40px;
-        height: 40px;
+    body.image-view-active .image-panel {
+        display: flex;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 3000;
+        background: transparent;
+        border-radius: 0;
+        padding: 20px;
+        box-sizing: border-box;
+        flex-direction: column;
     }
 
-    .action-button svg {
-        width: 22px;
-        height: 22px;
+    /* Ocultar chat mientras está activo el panel */
+    body.image-view-active .chat-container {
+        display: none !important;
     }
 }
+
+
 
 /* --- ESTILOS PARA LA ANIMACIÓN DE PENSANDO     --- */
 .typing-indicator {
