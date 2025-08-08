@@ -21,6 +21,7 @@ from src.agent.AgenteDeContexto import AgenteDeContexto
 from flask.globals import session
 from langgraph.graph import StateGraph
 
+from src.util import util_brief
 from src.util.util_bases_de_conocimiento import obtenerBaseDeConocimiento
 from src.util.util_images import responderImagen
 #Utilitarios para llm
@@ -294,7 +295,24 @@ También considera esta información del usuario:
       print(state)
       return output
 
-    def node_a6_agenteDeResumen(state: dict) -> dict:
+    def node_a6_agenteDeBrief(state: dict) -> dict:
+      output = state
+
+      print("Ejecutando node_a6_agenteDeBrief...")
+
+      # Obtenemos el mensaje del usuario
+      mensaje = state["prompt"]["contenido"]
+
+      # Generamos el brief usando el agente de análisis
+      brief = util_brief.generar_brief(mensaje)
+
+      # Guardamos el brief en la salida
+      output["output"]["brief"] = brief
+
+      print(state)
+      return output
+
+    def node_a7_agenteDeResumen(state: dict) -> dict:
       output = state
       output["output"] = {}
       
@@ -305,8 +323,7 @@ También considera esta información del usuario:
       
       print (state)
       return output
-    
-        
+
     #Construimos un grafo que recibe JSONs
     self.constructor = StateGraph(dict)
 
@@ -317,9 +334,8 @@ También considera esta información del usuario:
     self.constructor.add_node("node_a3_agenteDeMemoriaLargoPlazo", node_a3_agenteDeMemoriaLargoPlazo)
     self.constructor.add_node("node_a4_informacionPorRecordar", node_a4_informacionPorRecordar)
     self.constructor.add_node("node_a5_agenteDeChatbot", node_a5_agenteDeChatbot)
-    self.constructor.add_node("node_a6_agenteDeResumen", node_a6_agenteDeResumen)
-    #self.constructor.add_node("node_a6_agenteDeImagenes", node_a6_agenteDeImagenes)
-    #self.constructor.add_node("node_a7_agenteDeDiagramas", node_a7_agentedeDiagramas)
+    self.constructor.add_node("node_a6_agenteDeBrief", node_a6_agenteDeBrief)
+    self.constructor.add_node("node_a7_agenteDeResumen", node_a7_agenteDeResumen)
 
   #Dibujamos el grafo
   def dibujadoDeGrafo(self):
@@ -340,15 +356,17 @@ También considera esta información del usuario:
 
     #Conectamos un flujo secuencial
     self.constructor.add_edge("node_a4_informacionPorRecordar", "node_router")
-    #self.constructor.add_edge("node_a5_agenteDeChatbot", "node_a7_agenteDeDiagramas")
     self.constructor.add_conditional_edges("node_router", lambda state: state["accion"], {
-        "RESUMEN": "node_a6_agenteDeResumen",
+        "RESUMEN": "node_a7_agenteDeResumen",
         "CHAT": "node_a5_agenteDeChatbot"
     })
+
+    self.constructor.add_edge("node_a5_agenteDeChatbot", "node_a6_agenteDeBrief")
+
     #Indicamos los nodos en donde finaliza el grafo
     self.constructor.set_finish_point("node_a2_promptNoValido")
-    self.constructor.set_finish_point("node_a5_agenteDeChatbot")
-    self.constructor.set_finish_point("node_a6_agenteDeResumen")
+    self.constructor.set_finish_point("node_a6_agenteDeBrief")
+    self.constructor.set_finish_point("node_a7_agenteDeResumen")
     #Construimos el grafo
     self.grafo = self.constructor.compile()
 

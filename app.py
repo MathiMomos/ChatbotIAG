@@ -10,6 +10,7 @@ from src.util import util_llm
 from src.util import util_images
 from src.util import util_diagrams
 from src.util import util_charts
+from src.util import util_brief
 from src.util import util_images as ui
 from flask import session
 from langgraph.checkpoint.memory import InMemorySaver
@@ -88,7 +89,6 @@ def image():
     except Exception as e:
         return jsonify({"error": "Error al procesar la solicitud de imagen."}), 400
 
-
 @app.route("/diagram", methods=["POST"])
 def diagram():
     try:
@@ -104,7 +104,6 @@ def diagram():
     except Exception as e:
         print(f"Error en endpoint diagram: {e}")
         return jsonify({"error": f"Error interno del servidor: {str(e)}"}), 500
-
 
 @app.route("/chart", methods=["POST"])
 def chart():
