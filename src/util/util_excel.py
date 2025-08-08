@@ -1,6 +1,8 @@
 import pandas as pd
 import os
 import uuid
+import tempfile
+import shutil
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.schema import Document
 from azure.search.documents import SearchClient
@@ -13,7 +15,9 @@ def esArchivoExcel(rutaArchivo):
     return extension in ['.xlsx', '.xls']
 
 def cargarArchivoExcel(rutaDeArchivo, nombreDeBaseDeConocimiento: str):
-    chunks = obtenerChunksDeExcelPorHoja(rutaDeArchivo)
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as temp:
+        shutil.copy2(rutaDeArchivo, temp.name)
+        chunks = obtenerChunksDeExcelPorHoja(temp.name)
 
     # Conectarse a la base de conocimiento
     baseDeConocimiento = SearchClient(
@@ -39,8 +43,10 @@ def cargarArchivoExcel(rutaDeArchivo, nombreDeBaseDeConocimiento: str):
 
 def obtenerHojasExcel(rutaArchivo):
     try:
-        archivo_excel = pd.ExcelFile(rutaArchivo)
-        return archivo_excel.sheet_names
+        with open(rutaArchivo, 'rb') as file:
+            # Cargar el archivo Excel y obtener las hojas
+            archivo_excel = pd.ExcelFile(rutaArchivo)
+            return archivo_excel.sheet_names
     except Exception as e:
         raise Exception(f"No se pudo leer el archivo Excel: {str(e)}")
 
