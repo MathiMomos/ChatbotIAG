@@ -427,31 +427,29 @@ h1 {
     max-width: 70%;
 }
 
-/* Botones del bot*/
+/* Contenedor de botones del bot */
 .bot-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 5px;
-    margin-top: 5px;
-    width: 100%;
-    box-sizing: border-box;
+    margin-top: 0px;
 }
 
+/* Estilo fusionado: la forma y tamaño del segundo, con la transparencia del primero */
 .bot-actions button {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    background-color: transparent; /* Tomado del primer diseño */
+    border: none;                   /* Tomado del primer diseño */
     color: white;
     font-size: 0.9rem;
     font-weight: 500;
-    padding: 10px 15px;
-    border-radius: 20px;
+    padding: 10px 10px;             /* Mantenemos el padding para que se ajuste al texto */
+    border-radius: 25px;            /* Mantenemos la forma de píldora */
     cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s;
+    transition: background-color 0.2s;
 }
 
 .bot-actions button:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.2); /* Efecto hover sutil */
 }
 
 /* Contenedor de mensaje a enviar */

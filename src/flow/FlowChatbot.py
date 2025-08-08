@@ -391,7 +391,7 @@ También considera esta información del usuario:
     )
 
     #Devolvemos la respuesta
-    return respuesta["output"]["respuesta"]
+    return respuesta["output"]
 
   #Lee el archivo de información del usuario
   def leerArchivo(self):

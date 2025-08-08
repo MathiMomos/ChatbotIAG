@@ -365,6 +365,33 @@ function addModalCloseLogic(modal) {
     }
 
     globalMessages.addEventListener('click', function (event) {
+        // BRIEF (VER MÁS / VER MENOS)
+        const briefButton = event.target.closest('.brief-button');
+        if (briefButton) {
+            const messageElement = briefButton.closest('.bot-message');
+            const mainContent = messageElement.querySelector('.main-content');
+            const briefContent = messageElement.querySelector('.brief-content');
+
+            // Si el contenedor del brief no existe, no hacemos nada.
+            if (!briefContent) return;
+
+            briefButton.classList.toggle('is-expanded');
+
+            if (briefButton.classList.contains('is-expanded')) {
+                // Estado EXPANDIDO: Muestra el brief, oculta la respuesta principal.
+                mainContent.style.display = 'none';
+                briefContent.style.display = 'block';
+                briefButton.title = 'Ver menos';
+                briefButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M5 11v2h14v-2z"/></svg>`;
+            } else {
+                // Estado CONTRAÍDO: Muestra la respuesta principal, oculta el brief.
+                mainContent.style.display = 'block';
+                briefContent.style.display = 'none';
+                briefButton.title = 'Ver más';
+                briefButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M11 19v-6H5v-2h6V5h2v6h6v2h-6v6z"/></svg>`;
+            }
+        }
+
         // IMAGEN
         const imageButton = event.target.closest('.generate-image-button');
         if (imageButton) {
@@ -592,7 +619,7 @@ function addModalCloseLogic(modal) {
             .then(resp => resp.json())
             .then(data => {
                 hideThinkingIndicator();
-                renderBotResponse(data.respuesta);
+                renderBotResponse(data);
             })
             .catch(err => {
                 console.error(err);
@@ -700,13 +727,32 @@ function addModalCloseLogic(modal) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', 'bot-message');
 
+        // Contenedor para el contenido principal del mensaje
         const contentDiv = document.createElement('div');
-        contentDiv.innerHTML = marked.parse(markdownText);
+
+        // Texto principal (visible por defecto)
+        const mainResponseDiv = document.createElement('div');
+        mainResponseDiv.className = 'main-content'; // Clase para identificarlo
+        mainResponseDiv.innerHTML = marked.parse(data.respuesta || "No se recibió respuesta.");
+        contentDiv.appendChild(mainResponseDiv);
+
+        // Texto del brief (oculto por defecto, si existe)
+        if (data.brief) {
+            const briefDiv = document.createElement('div');
+            briefDiv.className = 'brief-content'; // Clase para identificarlo
+            briefDiv.style.display = 'none'; // Oculto al inicio
+            briefDiv.innerHTML = marked.parse(data.brief);
+            contentDiv.appendChild(briefDiv);
+        }
+
         messageDiv.appendChild(contentDiv);
 
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'bot-actions';
         actionsDiv.innerHTML = `
+            <button class="bot-action-button brief-button" title="Ver más">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M11 19v-6H5v-2h6V5h2v6h6v2h-6v6z"/></svg>
+            </button>
             <button class="bot-action-button generate-image-button" title="Generar Imagen">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M5 21q-.825 0-1.412-.587T3 19V5q0-.825.588-1.412T5 3h14q.825 0 1.413.588T21 5v14q0 .825-.587 1.413T19 21zm0-2h14V5H5zm1-2h12l-3.75-5l-3 4L9 13zm-1 2V5z"/></svg>
             </button>
@@ -758,7 +804,7 @@ function addModalCloseLogic(modal) {
                 .then(response => response.json())
                 .then(data => {
                     hideThinkingIndicator();
-                    renderBotResponse(data.respuesta);
+                    renderBotResponse(data);
                 })
                 .catch(error => {
                     console.error('Error:', error);

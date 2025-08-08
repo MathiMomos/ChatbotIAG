@@ -63,7 +63,7 @@ def chat():
     state = chatbot.grafo.get_state(config)
     print("DEBUG ▶︎ Salida del grafo:", respuestaModelo)
     print("DEBUG THREAT: ",state.values)
-    return jsonify({"respuesta": respuestaModelo})
+    return jsonify(respuestaModelo)
 
 
 @app.route("/imagen", methods=["POST"])
