@@ -22,6 +22,8 @@ document.addEventListener('DOMContentLoaded', function () {
     let audioPlayerId = 0;
     let usarBaseConocimiento = true;
     let isGeneratingContent = false;
+    let recordingInterval;
+    let recordingSeconds = 0;
     // --- LÓGICA DEL CARRUSEL ---
     let carouselItems = [];
     let currentIndex = 0;
@@ -444,8 +446,24 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         mediaRecorder.addEventListener('stop', handleAudioStop);
         mediaRecorder.start();
+        console.log('🎙️ Grabando...');
         isRecording = true;
         micButton.classList.add('recording');
+
+        // --- LÓGICA DEL CONTADOR (AÑADIDA) ---
+        const timerElement = document.createElement('span');
+        timerElement.id = 'recording-timer';
+        timerElement.className = 'recording-timer';
+        timerElement.textContent = '0:00';
+
+        inputContainer.insertBefore(timerElement, micButton);
+
+        recordingSeconds = 0;
+        recordingInterval = setInterval(() => {
+            recordingSeconds++;
+            timerElement.textContent = formatTime(recordingSeconds);
+        }, 1000);
+        // --- FIN DE LÓGICA DEL CONTADOR ---
     }
 
     function formatTime(seconds) {
@@ -649,6 +667,14 @@ document.addEventListener('DOMContentLoaded', function () {
             isRecording = false;
             micButton.classList.remove('recording');
             audioStream.getTracks().forEach(track => track.stop());
+
+            // --- LÓGICA DEL CONTADOR (AÑADIDA) ---
+            clearInterval(recordingInterval);
+            const timerElement = document.getElementById('recording-timer');
+            if (timerElement) {
+                timerElement.remove();
+            }
+            // --- FIN DE LÓGICA DEL CONTADOR ---
         }
     }
 
