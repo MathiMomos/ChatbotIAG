@@ -18,13 +18,10 @@ document.addEventListener('DOMContentLoaded', function () {
     let audioChunks = [];
     let isRecording = false;
     let audioStream;
-    let typeWriterTimeout;
-    let stopTypingRequested = false;
     let currentAudio = null;
     let audioPlayerId = 0;
     let usarBaseConocimiento = true;
     let isGeneratingContent = false;
-
     // --- LÓGICA DEL CARRUSEL ---
     let carouselItems = [];
     let currentIndex = 0;
@@ -381,9 +378,19 @@ document.addEventListener('DOMContentLoaded', function () {
         // AUDIO
         const audioButton = event.target.closest('.generate-audio-button');
         if (audioButton) {
-            const messageElement = event.target.closest('.bot-message');
-            const currentState = audioButton.dataset.state;
+            let messageElement;
+            const botMessage = event.target.closest('.bot-message');
+            const mainContent = botMessage.querySelector('.main-content');
+            const briefContent = botMessage.querySelector('.brief-content');
 
+            if (mainContent && mainContent.style.display !== 'none') {
+                messageElement = mainContent;
+            } else if (briefContent && briefContent.style.display !== 'none') {
+                messageElement = briefContent;
+            } else {
+                messageElement = botMessage; // fallback
+            }
+            currentState = audioButton.dataset.state;
             if (currentState === "playing" && currentAudio) {
                 currentAudio.pause();
                 audioButton.dataset.state = "paused";
@@ -409,7 +416,6 @@ document.addEventListener('DOMContentLoaded', function () {
     focoButton.addEventListener('click', function () {
         this.classList.toggle('active');
         usarBaseConocimiento = !usarBaseConocimiento;
-        console.log("Usar base de conocimiento:", usarBaseConocimiento);
     });
 
     closeImagePanelButton.addEventListener('click', () => {
@@ -438,7 +444,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         mediaRecorder.addEventListener('stop', handleAudioStop);
         mediaRecorder.start();
-        console.log('🎙️ Grabando...');
         isRecording = true;
         micButton.classList.add('recording');
     }
@@ -586,7 +591,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function generateAudio(messageElement, audioButton) {
-        const text = messageElement.querySelector('.main-content').innerText;
+        if (!messageElement) {
+            console.error("No se encontró el contenido del mensaje para generar audio.");
+            return;
+        }
+        const text = messageElement.innerText;
 
         try {
             const response = await fetch("/audio", {
