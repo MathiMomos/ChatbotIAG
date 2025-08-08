@@ -337,13 +337,17 @@ document.addEventListener('DOMContentLoaded', function () {
             briefButton.classList.toggle('is-expanded');
 
             if (briefButton.classList.contains('is-expanded')) {
-                mainContent.style.display = 'none';
-                briefContent.style.display = 'block';
+                // <<<<<< CAMBIO 1: LÓGICA INVERTIDA
+                // Estado EXPANDIDO: Muestra la respuesta completa, oculta el brief.
+                mainContent.style.display = 'block';
+                briefContent.style.display = 'none';
                 briefButton.title = 'Ver menos';
                 briefButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M5 11v2h14v-2z"/></svg>`;
             } else {
-                mainContent.style.display = 'block';
-                briefContent.style.display = 'none';
+                // <<<<<< CAMBIO 1: LÓGICA INVERTIDA
+                // Estado CONTRAÍDO: Muestra el brief, oculta la respuesta completa.
+                mainContent.style.display = 'none';
+                briefContent.style.display = 'block';
                 briefButton.title = 'Ver más';
                 briefButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M11 19v-6H5v-2h6V5h2v6h6v2h-6v6z"/></svg>`;
             }
@@ -572,17 +576,17 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(resp => resp.json())
             .then(data => {
                 hideThinkingIndicator();
-                renderBotResponse(data); // <<<<<<
+                renderBotResponse(data);
             })
             .catch(err => {
                 console.error(err);
                 hideThinkingIndicator();
-                renderBotResponse({ respuesta: 'Lo siento, algo salió mal al procesar tu audio.' }); // <<<<<<
+                renderBotResponse({ respuesta: 'Lo siento, algo salió mal al procesar tu audio.' });
             });
     }
 
     async function generateAudio(messageElement, audioButton) {
-        const text = messageElement.querySelector('.main-content').innerText; // <<<<<<
+        const text = messageElement.querySelector('.main-content').innerText;
 
         try {
             const response = await fetch("/audio", {
@@ -673,8 +677,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // <<<<<< INICIO DEL BLOQUE COMPLETAMENTE REEMPLAZADO
-    function renderBotResponse(data) {
+    function renderBotResponse(data) { // <<<<<< Recibe el objeto {respuesta, brief}
         stopTypingRequested = false;
 
         const messageDiv = document.createElement('div');
@@ -682,23 +685,32 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const contentDiv = document.createElement('div');
 
+        // El contenedor del brief
+        const briefDiv = document.createElement('div');
+        briefDiv.className = 'brief-content';
+
+        // El contenedor de la respuesta completa
         const mainResponseDiv = document.createElement('div');
         mainResponseDiv.className = 'main-content';
-        mainResponseDiv.innerHTML = marked.parse(data.respuesta || "No se recibió respuesta.");
-        contentDiv.appendChild(mainResponseDiv);
 
+        // Lógica para decidir qué mostrar por defecto
         if (data.brief) {
-            const briefDiv = document.createElement('div');
-            briefDiv.className = 'brief-content';
-            briefDiv.style.display = 'none';
             briefDiv.innerHTML = marked.parse(data.brief);
-            contentDiv.appendChild(briefDiv);
+            mainResponseDiv.innerHTML = marked.parse(data.respuesta || "");
+            mainResponseDiv.style.display = 'none'; // La respuesta completa empieza oculta
+        } else {
+            // Si no hay brief, solo mostramos la respuesta principal
+            briefDiv.innerHTML = marked.parse(data.respuesta || "No se recibió respuesta.");
         }
 
+        contentDiv.appendChild(briefDiv);
+        contentDiv.appendChild(mainResponseDiv);
         messageDiv.appendChild(contentDiv);
 
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'bot-actions';
+
+        // Solo se muestra el botón si hay un brief
         const briefButtonHTML = data.brief ? `
             <button class="bot-action-button brief-button" title="Ver más">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M11 19v-6H5v-2h6V5h2v6h6v2h-6v6z"/></svg>
@@ -729,7 +741,6 @@ document.addEventListener('DOMContentLoaded', function () {
         scrollToBottom();
         unlockUserInput();
     }
-    // <<<<<< FIN DEL BLOQUE COMPLETAMENTE REEMPLAZADO
 
     function sendMessage() {
         const text = userInput.value.trim();

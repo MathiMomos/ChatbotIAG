@@ -442,7 +442,7 @@ h1 {
     color: white;
     font-size: 0.9rem;
     font-weight: 500;
-    padding: 10px 10px;             /* Mantenemos el padding para que se ajuste al texto */
+    padding: 10px 12px;             /* Mantenemos el padding para que se ajuste al texto */
     border-radius: 25px;            /* Mantenemos la forma de píldora */
     cursor: pointer;
     transition: background-color 0.2s;
