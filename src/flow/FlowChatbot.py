@@ -16,9 +16,6 @@
 ## #######################################################################################################
 
 #Utilitario para definir un grafo de LangGraph
-
-from src.agent.AgenteDeContexto import AgenteDeContexto
-from flask.globals import session
 from langgraph.graph import StateGraph
 
 from src.util import util_brief
@@ -39,10 +36,10 @@ from src.agent.AgenteDeChatbot import *
 #Agente de Análisis
 from src.agent.AgenteDeAnalisis import *
 
-from src.agent.AgenteDeDiagramas import *
-
+#Agente de Resumen
 from src.agent.AgenteDeResumen import *
 
+#Agente de Supervisión
 from src.agent.AgenteDeSupervision import *
 ## #######################################################################################################
 ## @section Clase
@@ -159,10 +156,6 @@ También considera esta información del usuario:
       """
     )
 
-    self.agenteDeDiagramas = AgenteDeDiagramas(
-      llm = obtenerModelo()
-    )
-
     self.agenteDeResumen = AgenteDeResumen(
       llm = obtenerModelo()
     )
@@ -172,9 +165,7 @@ También considera esta información del usuario:
     )
   #Implementamos los nodos
   def implementacionDeNodos(self):
-
-
-      
+    
     #Nodo de Agente de Contexto
     def node_a1_agenteDeContexto(state: dict) -> dict:
       #Definimos la salida
@@ -370,7 +361,7 @@ También considera esta información del usuario:
     #Construimos el grafo
     self.grafo = self.constructor.compile()
 
-  def preparar_prompt(promptUsuario):
+  def preparar_prompt(self,promptUsuario):
     if isinstance(promptUsuario, dict) and "tipo" in promptUsuario:
         # Ya viene en formato correcto
         return promptUsuario
@@ -407,9 +398,11 @@ También considera esta información del usuario:
   
   #Escribe información sobre el usuario en su archivo
   def escribirArchivo(self, texto):
-      with open(self.archivoDeUsuario, 'w', encoding='utf-8') as archivo:
-          archivo.write(texto + '\n')
-  
+      try:
+        with open(self.archivoDeUsuario, 'w', encoding='utf-8') as archivo:
+          archivo.write((texto or '') + '\n')
+      except Exception:
+        pass  # no alteramos el flujo si falla la persistencia
   def reiniciar_memoria_del_chatbot(self):
         """Pasa la orden de reinicio al agente de chatbot."""
         print("Reiniciando la memoria del chatbot...")
