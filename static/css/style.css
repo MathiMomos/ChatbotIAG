@@ -777,8 +777,28 @@ h1 {
   }
 }
 
+
+
 #mic-button.recording {
-  animation: pulse-animation 1.5s ease-in-out infinite;
+    animation: pulse-animation 1.5s ease-in-out infinite;
+}
+
+#mic-button.recording svg {
+    fill: #ff3d00; /* Color del micrófono cuando está grabando */
+}
+
+/* Estilos para el contador de grabación de audio */
+.recording-timer {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1rem;
+    font-variant-numeric: tabular-nums; /* Asegura que los números no salten */
+    margin-right: 8px; /* Espacio entre el contador y el botón de micrófono */
+    animation: fadeIn 0.3s ease-in; /* Animación sutil de aparición */
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
 }
 
 .page-transition {
