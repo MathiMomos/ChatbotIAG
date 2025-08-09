@@ -934,3 +934,13 @@ h1 {
     min-width: 50px;
     text-align: center;
 }
+
+.version-info {
+    position: absolute;
+    bottom: 10px;
+    right: 25px;
+    font-size: 0.75rem; /* Tamaño pequeño */
+    color: rgba(255, 255, 255, 0.4); /* Color sutil */
+    font-weight: 500;
+    z-index: 10; /* Se asegura de que esté por encima de otros elementos */
+}
