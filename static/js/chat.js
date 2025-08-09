@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function () {
             img.alt = `Gráfico: ${title}`;
             img.classList.add('expandable-image');
             img.dataset.title = title;
-            
+
             // Agregar información para tooltip
             img.dataset.chartType = data.valor.tipo_descriptivo || 'Gráfico';
             img.dataset.dataCount = data.valor.datos_count || 0;
@@ -258,7 +258,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let modalAbierto = false;
 
-        document.addEventListener("click", function (e) {
+    document.addEventListener("click", function (e) {
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
         if (isMobile) {
@@ -393,9 +393,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const mainContent = botMessage.querySelector('.main-content');
             const briefContent = botMessage.querySelector('.brief-content');
 
-            if (mainContent && mainContent.style.display !== 'none') {
+            if (mainContent && mainContent.innerText.trim()) {
                 messageElement = mainContent;
-            } else if (briefContent && briefContent.style.display !== 'none') {
+            } else if (briefContent && briefContent.innerText.trim()) {
                 messageElement = briefContent;
             } else {
                 messageElement = botMessage;
@@ -432,7 +432,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.body.classList.remove('image-view-active');
     });
 
-        enviarButton.addEventListener('click', sendMessage);
+    enviarButton.addEventListener('click', sendMessage);
 
     userInput.addEventListener('keypress', function (event) {
         if (event.key === 'Enter' && !event.shiftKey) {
@@ -843,18 +843,18 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!tooltip) {
             tooltip = createTooltip();
         }
-        
+
         tooltip.innerHTML = content;
         tooltip.style.display = 'block';
-        
+
         const rect = tooltip.getBoundingClientRect();
         const x = e.clientX + 15;
         const y = e.clientY - rect.height / 2;
-        
+
         // Ajustar posición si se sale de la pantalla
         const maxX = window.innerWidth - rect.width - 10;
         const maxY = window.innerHeight - rect.height - 10;
-        
+
         tooltip.style.left = Math.min(x, maxX) + 'px';
         tooltip.style.top = Math.max(10, Math.min(y, maxY)) + 'px';
     }
@@ -867,13 +867,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Event listeners para tooltips
-    document.addEventListener('mouseover', function(e) {
+    document.addEventListener('mouseover', function (e) {
         const chartImage = e.target.closest('.generated-chart-container img');
         if (chartImage) {
             const chartType = chartImage.dataset.chartType || 'Gráfico';
             const dataCount = chartImage.dataset.dataCount || '0';
             const chartTitle = chartImage.dataset.chartTitle || 'Sin título';
-            
+
             const tooltipContent = `
                 <div class="tooltip-header">${chartTitle}</div>
                 <div class="tooltip-info">
@@ -882,18 +882,18 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div>Haz clic para ampliar</div>
                 </div>
             `;
-            
+
             showTooltip(e, tooltipContent);
         }
     });
 
-    document.addEventListener('mousemove', function(e) {
+    document.addEventListener('mousemove', function (e) {
         const chartImage = e.target.closest('.generated-chart-container img');
         if (chartImage) {
             const chartType = chartImage.dataset.chartType || 'Gráfico';
             const dataCount = chartImage.dataset.dataCount || '0';
             const chartTitle = chartImage.dataset.chartTitle || 'Sin título';
-            
+
             const tooltipContent = `
                 <div class="tooltip-header">${chartTitle}</div>
                 <div class="tooltip-info">
@@ -902,12 +902,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div>Haz clic para ampliar</div>
                 </div>
             `;
-            
+
             showTooltip(e, tooltipContent);
         }
     });
 
-    document.addEventListener('mouseout', function(e) {
+    document.addEventListener('mouseout', function (e) {
         const chartImage = e.target.closest('.generated-chart-container img');
         if (chartImage && !e.relatedTarget?.closest('.generated-chart-container')) {
             hideTooltip();
