@@ -258,8 +258,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let modalAbierto = false;
 
-    document.addEventListener("click", function (e) {
+        document.addEventListener("click", function (e) {
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+        if (isMobile) {
+            if (e.target.closest(".expandable-image") || e.target.closest(".expandable-diagram")) {
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            }
+        }
+
         if (window.innerWidth <= 768) return;
+
 
         const image = e.target.closest(".expandable-image");
         if (image && !modalAbierto) {
