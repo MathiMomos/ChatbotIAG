@@ -339,7 +339,7 @@ document.addEventListener('DOMContentLoaded', function () {
             myDiagram.model = new go.GraphLinksModel(diagramData.nodes || [], diagramData.links || []);
         }
     }
-
+    
     globalMessages.addEventListener('click', function (event) {
         const briefButton = event.target.closest('.brief-button');
         if (briefButton) {
@@ -361,6 +361,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 briefContent.style.display = 'block';
                 briefButton.title = 'Ver más';
                 briefButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M11 19v-6H5v-2h6V5h2v6h6v2h-6v6z"/></svg>`;
+            }
+            const audioBtn = messageElement.querySelector('.generate-audio-button');
+            if (audioBtn) {
+                audioBtn.dataset.state = 'idle';
+                audioBtn.dataset.lastText = '';
+                restorePlayIcon(audioBtn);
+            }
+            if (currentAudio) { // opcional: cortar audio en reproducción
+                currentAudio.pause();
+                currentAudio = null;
             }
         }
 
@@ -385,31 +395,49 @@ document.addEventListener('DOMContentLoaded', function () {
                 generateChart(messageElement);
             }
         }
-
+        
         const audioButton = event.target.closest('.generate-audio-button');
         if (audioButton) {
-            let messageElement;
             const botMessage = event.target.closest('.bot-message');
             const mainContent = botMessage.querySelector('.main-content');
             const briefContent = botMessage.querySelector('.brief-content');
 
-            if (briefContent && briefContent.style.display !== 'none') {
-                messageElement = briefContent;
-            } else {
-                messageElement = mainContent;
+            function pickMessageElement() {
+                const hasText = el => el && el.innerText && el.innerText.trim().length > 0;
+
+                // 1) Preferir visible + con texto
+                if (mainContent && mainContent.style.display !== 'none' && hasText(mainContent)) return mainContent;
+                if (briefContent && briefContent.style.display !== 'none' && hasText(briefContent)) return briefContent;
+
+                // 2) Si lo visible no tiene texto, usar el que sí tenga
+                if (hasText(briefContent)) return briefContent;
+                if (hasText(mainContent)) return mainContent;
+
+                // 3) Último recurso
+                return botMessage;
             }
 
+            const messageElement = pickMessageElement();
+            const visibleText = (messageElement.innerText || "").trim();
             const currentState = audioButton.dataset.state;
 
-            if (currentState === "playing" && currentAudio) {
+            // 🔹 Si el texto visible cambió respecto al último generado, forzar regeneración
+            if (currentState !== "playing" &&
+                currentState !== "paused" &&
+                audioButton.dataset.lastText !== visibleText) {
+                generateAudio(messageElement, audioButton);
+            }
+            else if (currentState === "playing" && currentAudio) {
                 currentAudio.pause();
                 audioButton.dataset.state = "paused";
                 restorePlayIcon(audioButton);
-            } else if (currentState === "paused" && currentAudio) {
+            }
+            else if (currentState === "paused" && currentAudio) {
                 currentAudio.play();
                 audioButton.dataset.state = "playing";
                 audioButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M6 4h4v16H6zm8 0h4v16h-4z"/></svg>`;
-            } else if (currentState === "idle") {
+            }
+            else if (currentState === "idle" || audioButton.dataset.lastText !== visibleText) {
                 generateAudio(messageElement, audioButton);
             }
         }
@@ -620,34 +648,30 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function generateAudio(messageElement, audioButton) {
-        if (!messageElement) {
-            console.error("No se encontró el contenido del mensaje para generar audio.");
-            return;
-        }
-        const text = messageElement.innerText;
+        if (!messageElement) return;
+        const text = (messageElement.innerText || '').trim();
+        if (!text) { console.warn('No hay texto visible para sintetizar.'); return; }
 
         try {
             const response = await fetch("/audio", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ prompt: text })
             });
 
             const data = await response.json();
 
             if (response.ok && data.valor) {
-                if (currentAudio) {
-                    currentAudio.pause();
-                    currentAudio = null;
-                }
+                if (currentAudio) { currentAudio.pause(); currentAudio = null; }
 
                 const audio = new Audio("data:audio/wav;base64," + data.valor);
                 currentAudio = audio;
+
+                // ✅ Guardar lastText SOLO cuando la síntesis fue exitosa
+                audioButton.dataset.lastText = text;
+
                 audioButton.dataset.state = "playing";
                 audioButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M6 4h4v16H6zm8 0h4v16h-4z"/></svg>`;
-
                 audio.play();
 
                 audio.onended = () => {
