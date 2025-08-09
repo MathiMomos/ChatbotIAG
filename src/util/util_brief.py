@@ -9,7 +9,9 @@ def generar_brief(descripcion_brief: str):
     """
 
     plantilla = f"""
-        Tu tarea es actuar como un experto en comunicación concisa, resume brevemente el siguiente texto en un brief claro y directo, no debe exceder las 200 palabras
+        Tu tarea es actuar como un experto en comunicación concisa,
+        Resume brevemente el siguiente texto en un brief claro y directo, no debe exceder las 200 palabras
+        Debes respetar el idioma del texto original, si el texto es en español, el brief debe ser en español, etc.
         No añadas introducciones como 'aquí tienes un resumen' y ve directo al grano
     
         Texto a resumir:

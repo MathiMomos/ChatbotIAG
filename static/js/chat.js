@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let isGeneratingContent = false;
     let recordingInterval;
     let recordingSeconds = 0;
+
     // --- LÓGICA DEL CARRUSEL ---
     let carouselItems = [];
     let currentIndex = 0;
@@ -89,7 +90,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         isGeneratingContent = true;
         document.body.classList.add('image-view-active');
-        const messageText = messageElement.querySelector('.main-content').innerText || messageElement.textContent; // <<<<<<
+        const messageText = messageElement.querySelector('.main-content').innerText || messageElement.textContent;
         const loadingIndicator = document.createElement('div');
         loadingIndicator.innerHTML = `<div class="typing-indicator" style="padding: 20px; margin: auto;"><span></span><span></span><span></span></div>`;
         imageDisplayArea.innerHTML = '';
@@ -130,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         isGeneratingContent = true;
         document.body.classList.add('image-view-active');
-        let messageText = messageElement.querySelector('.main-content').innerText || messageElement.textContent; // <<<<<<
+        let messageText = messageElement.querySelector('.main-content').innerText || messageElement.textContent;
         const loadingIndicator = document.createElement('div');
         loadingIndicator.innerHTML = `<div class="typing-indicator" style="padding: 20px; margin: auto;"><span></span><span></span><span></span></div>`;
         imageDisplayArea.innerHTML = '';
@@ -180,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         isGeneratingContent = true;
         document.body.classList.add('image-view-active');
-        let messageText = messageElement.querySelector('.main-content').innerText || messageElement.textContent; // <<<<<<
+        let messageText = messageElement.querySelector('.main-content').innerText || messageElement.textContent;
         const loadingIndicator = document.createElement('div');
         loadingIndicator.innerHTML = `<div class="typing-indicator" style="padding: 20px; margin: auto;"><span></span><span></span><span></span></div>`;
         imageDisplayArea.innerHTML = '';
@@ -324,7 +325,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     globalMessages.addEventListener('click', function (event) {
-        // BRIEF (VER MÁS / VER MENOS)
         const briefButton = event.target.closest('.brief-button');
         if (briefButton) {
             const messageElement = briefButton.closest('.bot-message');
@@ -336,15 +336,11 @@ document.addEventListener('DOMContentLoaded', function () {
             briefButton.classList.toggle('is-expanded');
 
             if (briefButton.classList.contains('is-expanded')) {
-                // <<<<<< CAMBIO 1: LÓGICA INVERTIDA
-                // Estado EXPANDIDO: Muestra la respuesta completa, oculta el brief.
                 mainContent.style.display = 'block';
                 briefContent.style.display = 'none';
                 briefButton.title = 'Ver menos';
                 briefButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M5 11v2h14v-2z"/></svg>`;
             } else {
-                // <<<<<< CAMBIO 1: LÓGICA INVERTIDA
-                // Estado CONTRAÍDO: Muestra el brief, oculta la respuesta completa.
                 mainContent.style.display = 'none';
                 briefContent.style.display = 'block';
                 briefButton.title = 'Ver más';
@@ -352,7 +348,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        // IMAGEN
         const imageButton = event.target.closest('.generate-image-button');
         if (imageButton) {
             const messageElement = event.target.closest('.bot-message');
@@ -360,7 +355,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 generateImage(messageElement);
             }
         }
-        // DIAGRAMA
         const diagramButton = event.target.closest('.generate-diagram-button');
         if (diagramButton) {
             const messageElement = event.target.closest('.bot-message');
@@ -368,7 +362,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 generateDiagram(messageElement);
             }
         }
-        // ESTADISTICA
         const chartButton = event.target.closest('.generate-chart-button');
         if (chartButton) {
             const messageElement = event.target.closest('.bot-message');
@@ -377,7 +370,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        // AUDIO
         const audioButton = event.target.closest('.generate-audio-button');
         if (audioButton) {
             let messageElement;
@@ -390,9 +382,9 @@ document.addEventListener('DOMContentLoaded', function () {
             } else if (briefContent && briefContent.style.display !== 'none') {
                 messageElement = briefContent;
             } else {
-                messageElement = botMessage; // fallback
+                messageElement = botMessage;
             }
-            currentState = audioButton.dataset.state;
+            const currentState = audioButton.dataset.state;
             if (currentState === "playing" && currentAudio) {
                 currentAudio.pause();
                 audioButton.dataset.state = "paused";
@@ -424,7 +416,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.body.classList.remove('image-view-active');
     });
 
-    enviarButton.addEventListener('click', sendMessage);
+        enviarButton.addEventListener('click', sendMessage);
 
     userInput.addEventListener('keypress', function (event) {
         if (event.key === 'Enter' && !event.shiftKey) {
@@ -438,32 +430,35 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     async function startRecording() {
-        audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(audioStream);
-        audioChunks = [];
-        mediaRecorder.addEventListener('dataavailable', event => {
-            audioChunks.push(event.data);
-        });
-        mediaRecorder.addEventListener('stop', handleAudioStop);
-        mediaRecorder.start();
-        console.log('🎙️ Grabando...');
-        isRecording = true;
-        micButton.classList.add('recording');
+        try {
+            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(audioStream);
+            audioChunks = [];
+            mediaRecorder.addEventListener('dataavailable', event => {
+                audioChunks.push(event.data);
+            });
+            mediaRecorder.addEventListener('stop', handleAudioStop);
+            mediaRecorder.start();
+            console.log('🎙️ Grabando...');
+            isRecording = true;
+            micButton.classList.add('recording');
 
-        // --- LÓGICA DEL CONTADOR (AÑADIDA) ---
-        const timerElement = document.createElement('span');
-        timerElement.id = 'recording-timer';
-        timerElement.className = 'recording-timer';
-        timerElement.textContent = '0:00';
+            const timerElement = document.createElement('span');
+            timerElement.id = 'recording-timer';
+            timerElement.className = 'recording-timer';
+            timerElement.textContent = '0:00';
 
-        inputContainer.insertBefore(timerElement, micButton);
+            micButton.parentNode.insertBefore(timerElement, micButton); // <<<<<< CORRECCIÓN FINAL
 
-        recordingSeconds = 0;
-        recordingInterval = setInterval(() => {
-            recordingSeconds++;
-            timerElement.textContent = formatTime(recordingSeconds);
-        }, 1000);
-        // --- FIN DE LÓGICA DEL CONTADOR ---
+            recordingSeconds = 0;
+            recordingInterval = setInterval(() => {
+                recordingSeconds++;
+                timerElement.textContent = formatTime(recordingSeconds);
+            }, 1000);
+        } catch (err) {
+            console.error("Error al iniciar la grabación:", err);
+            addMessage("No se pudo iniciar la grabación. ¿Diste permiso para usar el micrófono?", "bot");
+        }
     }
 
     function formatTime(seconds) {
@@ -668,13 +663,11 @@ document.addEventListener('DOMContentLoaded', function () {
             micButton.classList.remove('recording');
             audioStream.getTracks().forEach(track => track.stop());
 
-            // --- LÓGICA DEL CONTADOR (AÑADIDA) ---
             clearInterval(recordingInterval);
             const timerElement = document.getElementById('recording-timer');
             if (timerElement) {
                 timerElement.remove();
             }
-            // --- FIN DE LÓGICA DEL CONTADOR ---
         }
     }
 
@@ -712,7 +705,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function renderBotResponse(data) { // <<<<<< Recibe el objeto {respuesta, brief}
+    function renderBotResponse(data) {
         stopTypingRequested = false;
 
         const messageDiv = document.createElement('div');
@@ -720,21 +713,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const contentDiv = document.createElement('div');
 
-        // El contenedor del brief
         const briefDiv = document.createElement('div');
         briefDiv.className = 'brief-content';
 
-        // El contenedor de la respuesta completa
         const mainResponseDiv = document.createElement('div');
         mainResponseDiv.className = 'main-content';
 
-        // Lógica para decidir qué mostrar por defecto
         if (data.brief) {
             briefDiv.innerHTML = marked.parse(data.brief);
             mainResponseDiv.innerHTML = marked.parse(data.respuesta || "");
-            mainResponseDiv.style.display = 'none'; // La respuesta completa empieza oculta
+            mainResponseDiv.style.display = 'none';
         } else {
-            // Si no hay brief, solo mostramos la respuesta principal
             briefDiv.innerHTML = marked.parse(data.respuesta || "No se recibió respuesta.");
         }
 
@@ -745,7 +734,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'bot-actions';
 
-        // Solo se muestra el botón si hay un brief
         const briefButtonHTML = data.brief ? `
             <button class="bot-action-button brief-button" title="Ver más">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M11 19v-6H5v-2h6V5h2v6h6v2h-6v6z"/></svg>
@@ -803,12 +791,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(response => response.json())
                 .then(data => {
                     hideThinkingIndicator();
-                    renderBotResponse(data); // <<<<<<
+                    renderBotResponse(data);
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     hideThinkingIndicator();
-                    renderBotResponse({ respuesta: 'Lo siento, algo salió mal.' }); // <<<<<<
+                    renderBotResponse({ respuesta: 'Lo siento, algo salió mal.' });
                 });
         }
     }
