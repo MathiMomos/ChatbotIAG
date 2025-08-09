@@ -393,14 +393,14 @@ document.addEventListener('DOMContentLoaded', function () {
             const mainContent = botMessage.querySelector('.main-content');
             const briefContent = botMessage.querySelector('.brief-content');
 
-            if (mainContent && mainContent.innerText.trim()) {
-                messageElement = mainContent;
-            } else if (briefContent && briefContent.innerText.trim()) {
+            if (briefContent && briefContent.style.display !== 'none') {
                 messageElement = briefContent;
             } else {
-                messageElement = botMessage;
+                messageElement = mainContent;
             }
+
             const currentState = audioButton.dataset.state;
+
             if (currentState === "playing" && currentAudio) {
                 currentAudio.pause();
                 audioButton.dataset.state = "paused";
