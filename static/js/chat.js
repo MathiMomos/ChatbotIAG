@@ -156,6 +156,11 @@ document.addEventListener('DOMContentLoaded', function () {
             img.alt = `Gráfico: ${title}`;
             img.classList.add('expandable-image');
             img.dataset.title = title;
+            
+            // Agregar información para tooltip
+            img.dataset.chartType = data.valor.tipo_descriptivo || 'Gráfico';
+            img.dataset.dataCount = data.valor.datos_count || 0;
+            img.dataset.chartTitle = title;
 
             chartContainer.appendChild(img);
             carouselItems.push(chartContainer.outerHTML);
@@ -812,4 +817,89 @@ document.addEventListener('DOMContentLoaded', function () {
 
     userInput.addEventListener('input', adjustTextareaHeight);
     adjustTextareaHeight();
+
+    // --- FUNCIONALIDAD DE TOOLTIPS PARA GRÁFICOS ---
+    function createTooltip() {
+        const tooltip = document.createElement('div');
+        tooltip.className = 'chart-tooltip';
+        tooltip.style.display = 'none';
+        document.body.appendChild(tooltip);
+        return tooltip;
+    }
+
+    function showTooltip(e, content) {
+        let tooltip = document.querySelector('.chart-tooltip');
+        if (!tooltip) {
+            tooltip = createTooltip();
+        }
+        
+        tooltip.innerHTML = content;
+        tooltip.style.display = 'block';
+        
+        const rect = tooltip.getBoundingClientRect();
+        const x = e.clientX + 15;
+        const y = e.clientY - rect.height / 2;
+        
+        // Ajustar posición si se sale de la pantalla
+        const maxX = window.innerWidth - rect.width - 10;
+        const maxY = window.innerHeight - rect.height - 10;
+        
+        tooltip.style.left = Math.min(x, maxX) + 'px';
+        tooltip.style.top = Math.max(10, Math.min(y, maxY)) + 'px';
+    }
+
+    function hideTooltip() {
+        const tooltip = document.querySelector('.chart-tooltip');
+        if (tooltip) {
+            tooltip.style.display = 'none';
+        }
+    }
+
+    // Event listeners para tooltips
+    document.addEventListener('mouseover', function(e) {
+        const chartImage = e.target.closest('.generated-chart-container img');
+        if (chartImage) {
+            const chartType = chartImage.dataset.chartType || 'Gráfico';
+            const dataCount = chartImage.dataset.dataCount || '0';
+            const chartTitle = chartImage.dataset.chartTitle || 'Sin título';
+            
+            const tooltipContent = `
+                <div class="tooltip-header">${chartTitle}</div>
+                <div class="tooltip-info">
+                    <div><strong>Tipo:</strong> ${chartType}</div>
+                    <div><strong>Elementos:</strong> ${dataCount} datos</div>
+                    <div>Haz clic para ampliar</div>
+                </div>
+            `;
+            
+            showTooltip(e, tooltipContent);
+        }
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        const chartImage = e.target.closest('.generated-chart-container img');
+        if (chartImage) {
+            const chartType = chartImage.dataset.chartType || 'Gráfico';
+            const dataCount = chartImage.dataset.dataCount || '0';
+            const chartTitle = chartImage.dataset.chartTitle || 'Sin título';
+            
+            const tooltipContent = `
+                <div class="tooltip-header">${chartTitle}</div>
+                <div class="tooltip-info">
+                    <div><strong>Tipo:</strong> ${chartType}</div>
+                    <div><strong>Elementos:</strong> ${dataCount} datos</div>
+                    <div>Haz clic para ampliar</div>
+                </div>
+            `;
+            
+            showTooltip(e, tooltipContent);
+        }
+    });
+
+    document.addEventListener('mouseout', function(e) {
+        const chartImage = e.target.closest('.generated-chart-container img');
+        if (chartImage && !e.relatedTarget?.closest('.generated-chart-container')) {
+            hideTooltip();
+        }
+    });
 });
