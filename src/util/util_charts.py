@@ -121,7 +121,7 @@ def crear_grafico_matplotlib(config):
     Retorna la imagen como base64.
     """
     try:
-        plt.figure(figsize=(12, 8))
+        plt.figure(figsize=(16, 8))  # Más ancho para acomodar leyendas con texto largo
         plt.clf()  # Limpiar figura anterior
         
         # Configurar estilo y colores
@@ -132,6 +132,36 @@ def crear_grafico_matplotlib(config):
         tipo = config.get("tipo", "bar")
         titulo = config.get("titulo", "Gráfico")
         datos = config.get("datos", {})
+        
+        # Función para generar etiquetas abreviadas cuando el texto es muy largo
+        def generar_etiquetas_abreviadas(categorias, max_length=15):
+            """
+            Genera etiquetas abreviadas (A, B, C...) para textos largos
+            y retorna tanto las etiquetas cortas como el mapeo para la leyenda
+            """
+            etiquetas_cortas = []
+            mapeo_leyenda = []
+            alfabeto = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+            
+            for i, categoria in enumerate(categorias):
+                if len(str(categoria)) > max_length:
+                    # Usar letras para textos largos
+                    if i < len(alfabeto):
+                        etiqueta_corta = alfabeto[i]
+                    else:
+                        # Si hay más de 26 categorías, usar A1, A2, etc.
+                        letra_base = alfabeto[i // 26 - 1] if i >= 26 else 'A'
+                        numero = (i % 26) + 1 if i >= 26 else i + 1
+                        etiqueta_corta = f"{letra_base}{numero}"
+                    
+                    etiquetas_cortas.append(etiqueta_corta)
+                    mapeo_leyenda.append(f"{etiqueta_corta}: {categoria}")
+                else:
+                    # Mantener texto original si no es muy largo
+                    etiquetas_cortas.append(categoria)
+                    mapeo_leyenda.append(categoria)
+            
+            return etiquetas_cortas, mapeo_leyenda
         
         # Paleta de colores moderna y atractiva
         colores_modernos = [
@@ -145,15 +175,18 @@ def crear_grafico_matplotlib(config):
             valores = datos.get("valores", [])
             colores = config.get("colores", colores_modernos[:len(valores)])
             
-            bars = plt.bar(categorias, valores, color=colores, alpha=0.8, edgecolor='white', linewidth=1.5)
+            # Generar etiquetas abreviadas si es necesario
+            etiquetas_cortas, mapeo_leyenda = generar_etiquetas_abreviadas(categorias)
+            
+            bars = plt.bar(etiquetas_cortas, valores, color=colores, alpha=0.8, edgecolor='white', linewidth=1.5)
             plt.xlabel(config.get("xlabel", "Categorías"), fontweight='bold')
             plt.ylabel(config.get("ylabel", "Valores"), fontweight='bold')
             
-            # Crear leyenda para gráfico de barras
+            # Crear leyenda para gráfico de barras fuera del área del gráfico
             legend_elements = [plt.Rectangle((0,0),1,1, facecolor=color, alpha=0.8, edgecolor='white') 
                              for color in colores]
-            plt.legend(legend_elements, categorias, loc='upper right', frameon=True, 
-                      fancybox=True, shadow=True, fontsize=10)
+            plt.legend(legend_elements, mapeo_leyenda, bbox_to_anchor=(1.05, 1), loc='upper left', 
+                      frameon=True, fancybox=True, shadow=True, fontsize=10)
             
             # Añadir valores en las barras
             for bar, valor in zip(bars, valores):
@@ -166,18 +199,39 @@ def crear_grafico_matplotlib(config):
             valores = datos.get("valores", [])
             color = config.get("color", '#4ECDC4')
             
-            line = plt.plot(categorias, valores, marker='o', color=color, linewidth=3, 
+            # Generar etiquetas abreviadas si es necesario
+            etiquetas_cortas, mapeo_leyenda = generar_etiquetas_abreviadas(categorias)
+            
+            line = plt.plot(etiquetas_cortas, valores, marker='o', color=color, linewidth=3, 
                     markersize=8, markerfacecolor='white', markeredgewidth=2, markeredgecolor=color, 
                     label=config.get("ylabel", "Serie de datos"))
             plt.xlabel(config.get("xlabel", "X"), fontweight='bold')
             plt.ylabel(config.get("ylabel", "Y"), fontweight='bold')
             plt.grid(True, alpha=0.3, linestyle='--')
             
-            # Añadir leyenda para gráfico de líneas
-            plt.legend(loc='upper left', frameon=True, fancybox=True, shadow=True, fontsize=10)
+            # Si hay etiquetas abreviadas, mostrar leyenda con mapeo completo
+            if any(len(str(cat)) > 15 for cat in categorias):
+                # Crear elementos de leyenda personalizados para las categorías
+                legend_elements = [plt.Line2D([0], [0], marker='o', color=color, linewidth=3,
+                                            markersize=8, markerfacecolor='white', 
+                                            markeredgewidth=2, markeredgecolor=color)]
+                legend_labels = [config.get("ylabel", "Serie de datos")]
+                
+                # Añadir mapeo de categorías a la leyenda
+                for mapeo in mapeo_leyenda:
+                    if ":" in mapeo:  # Solo mostrar las que fueron abreviadas
+                        legend_elements.append(plt.Line2D([0], [0], color='gray', alpha=0.7))
+                        legend_labels.append(mapeo)
+                
+                plt.legend(legend_elements, legend_labels, bbox_to_anchor=(1.05, 1), loc='upper left', 
+                          frameon=True, fancybox=True, shadow=True, fontsize=10)
+            else:
+                # Añadir leyenda para gráfico de líneas fuera del área del gráfico
+                plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', frameon=True, 
+                          fancybox=True, shadow=True, fontsize=10)
             
             # Añadir valores en los puntos
-            for i, (cat, val) in enumerate(zip(categorias, valores)):
+            for i, (cat, val) in enumerate(zip(etiquetas_cortas, valores)):
                 plt.annotate(f'{val:,.0f}', (i, val), textcoords="offset points", 
                            xytext=(0,10), ha='center', fontweight='bold')
             
@@ -186,7 +240,11 @@ def crear_grafico_matplotlib(config):
             valores = datos.get("valores", [])
             colores = config.get("colores", colores_modernos[:len(valores)])
             
-            wedges, texts, autotexts = plt.pie(valores, labels=categorias, colors=colores, 
+            # Generar etiquetas abreviadas si es necesario
+            etiquetas_cortas, mapeo_leyenda = generar_etiquetas_abreviadas(categorias)
+            
+            # Para gráficos de pastel, usar etiquetas abreviadas solo en las secciones
+            wedges, texts, autotexts = plt.pie(valores, labels=etiquetas_cortas, colors=colores, 
                                              autopct='%1.1f%%', startangle=90, 
                                              explode=[0.05]*len(valores), shadow=True)
             
@@ -198,6 +256,14 @@ def crear_grafico_matplotlib(config):
             
             for text in texts:
                 text.set_fontweight('bold')
+            
+            # Si hay etiquetas abreviadas, mostrar leyenda con mapeo completo
+            if any(len(str(cat)) > 15 for cat in categorias):
+                # Crear leyenda con colores y mapeo completo
+                legend_elements = [plt.Rectangle((0,0),1,1, facecolor=color, alpha=0.8, edgecolor='white') 
+                                 for color in colores]
+                plt.legend(legend_elements, mapeo_leyenda, bbox_to_anchor=(1.05, 1), loc='upper left', 
+                          frameon=True, fancybox=True, shadow=True, fontsize=10)
             
             plt.axis('equal')
             
@@ -217,8 +283,9 @@ def crear_grafico_matplotlib(config):
             plt.ylabel(config.get("ylabel", "Frecuencia"), fontweight='bold')
             plt.grid(True, alpha=0.3, axis='y', linestyle='--')
             
-            # Añadir leyenda para histograma
-            plt.legend(loc='upper right', frameon=True, fancybox=True, shadow=True, fontsize=10)
+            # Añadir leyenda para histograma fuera del área del gráfico
+            plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', frameon=True, 
+                      fancybox=True, shadow=True, fontsize=10)
             
         elif tipo == "scatter":
             x = datos.get("x", [])
@@ -231,14 +298,15 @@ def crear_grafico_matplotlib(config):
             plt.ylabel(config.get("ylabel", "Y"), fontweight='bold')
             plt.grid(True, alpha=0.3, linestyle='--')
             
-            # Añadir leyenda para gráfico de dispersión
-            plt.legend(loc='upper left', frameon=True, fancybox=True, shadow=True, fontsize=10)
+            # Añadir leyenda para gráfico de dispersión fuera del área del gráfico
+            plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', frameon=True, 
+                      fancybox=True, shadow=True, fontsize=10)
         
         else:
             return {"error": f"Tipo de gráfico no soportado: {tipo}"}
         
         plt.title(titulo, fontsize=18, fontweight='bold', pad=25, color='#2F3542')
-        plt.tight_layout(pad=2.0)
+        plt.tight_layout(pad=2.0, rect=[0, 0, 0.75, 1])  # Más espacio para leyendas con texto largo
         
         # Mejorar el fondo
         plt.gca().set_facecolor('#FAFAFA')
