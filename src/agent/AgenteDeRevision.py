@@ -28,6 +28,5 @@ class AgenteDeRevision:
     def decidir(self, mensaje: str) -> str:
         consulta = self.prompt.format(mensaje=mensaje)
         respuesta = self.llm.invoke(consulta).content
-        # limpiamos comillas o posibles formato triple backtick
         respuesta = respuesta.replace("```json", "").replace("```", "").strip()
         return json.loads(respuesta)["validacion"]
